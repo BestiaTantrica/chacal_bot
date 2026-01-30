@@ -25,3 +25,6 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+user_data/hyperopt.lock
+user_data/regimen_actual.json
