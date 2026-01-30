@@ -2,11 +2,11 @@
 trigger: always_on
 ---
 
-## ARQUITECTURA QUANT: VALIDACIÓN DE PROTOCOLO DE SUPERVIVENCIA (O.C.I.)
+## ARQUITECTURA QUANT: VALIDACIÓN DE PROTOCOLO DE SUPERVIVENCIa
 
 **ANÁLISIS DE ESTRATEGIA: VALIDACIÓN COMPLETA**
 
-El diseño propuesto para la instancia Oracle Cloud Infrastructure (O.C.I.) de 1GB de RAM es una obra maestra de la ingeniería de recursos limitados. Se ha neutralizado la amenaza principal (OOM Killer) mediante una manipulación directa del kernel.
+El diseño propuesto para aws instasncia de 1GB de RAM es una obra maestra de la ingeniería de recursos limitados.
 
 ### **CONFIRMACIÓN TÉCNICA (PROTOCOLO SWAP ACTIVO)**
 
@@ -29,10 +29,10 @@ El enfoque "Chacal" combina eficiencia algorítmica y gestión estricta de datos
 
 Antes de ejecutar el comando de optimización, la instancia debe tener el set de datos filtrado para evitar lecturas innecesarias.
 
-1.  **Definición de `StaticPairList`:**
+1. **Definición de `StaticPairList`:**
     Asegúrese de que el `config.json` tenga una lista estricta de no más de 10-15 pares de alta liquidez.
 
-2.  **Descarga Focalizada:**
+2. **Descarga Focalizada:**
     Descargar solo los últimos 60 días de datos para los pares definidos.
 
     ```bash
@@ -62,3 +62,33 @@ Hemos pasado de un riesgo de colapso del 90% a un **entorno de ejecución establ
 La estrategia ahora no se centra en la lucha contra la memoria, sino en la **Calidad del Resultado** mediante la aplicación rigurosa de Walk-Forward y Monte Carlo para validar la robustez del 1% diario.
 
 **Misión Aprobada:** Proceda con la implementación del SWAP y la ejecución de la Hyperopt en modo `job-workers 1`.
+
+#### # ===========================================
+
+# CONFIGURACIÓN PERMANENTE - PROTOCOLO CHACAL
+
+# ===========================================
+
+# Este archivo contiene las credenciales y parámetros del deployment
+
+# NO BORRAR - El agente usa esto para no pedir los datos cada vez
+
+# --- AWS ---
+
+AWS_IP=56.125.187.241
+AWS_USER=ec2-user
+AWS_KEY=llave-sao-paulo.pem
+AWS_DEST=/home/ec2-user/chacal_bot
+
+# --- BINANCE API ---
+
+BINANCE_API_KEY=2a9MJaipSfFD0JuraWIdsGxct9VjFXwKe8rCvstV0zvVwSc12vZbTjgQW76bFjkA
+BINANCE_SECRET_KEY=BVmyGezpSEIGic7GrFrY2i3R96xJkzMb70mAf077c2G2tx8aIgFiMMpOCCpBJXTs
+
+# --- WORKFLOW ---
+
+# 1. PC: Editar archivos localmente
+
+# 2. GIT: git add . && git commit -m "mensaje" && git push
+
+# 3. SERVER: Ejecutar desplegar_aws.ps1 -Ip $AWS_IP
