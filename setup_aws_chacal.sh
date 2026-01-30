@@ -70,17 +70,47 @@ cd $BASE_DIR
 
 # 5. INSTALACIÓN DE DEPENDENCIAS PYTHON (Para el Comandante)
 echo -e "\n[4/5] 🐍 Comandante Deps..."
-# Solo necesitamos librerías básicas si comandante usa subprocess
-# Pero por si acaso:
 pip3 install requests --user
 
-echo -e "\n[5/5] 🏁 FINALIZANDO..."
+# 6. CONFIGURACIÓN DE SISTEMA AUTÓNOMO (SYSTEMD + LOOP)
+echo -e "\n[5/5] ⚙️ Configurando Servicio Autónomo (Chacal Loop)..."
+
+# Copiar loop script y dar permisos
+chmod +x $BASE_DIR/loop_chacal.sh
+
+# Crear servicio systemd
+cat <<EOF | sudo tee /etc/systemd/system/chacal.service
+[Unit]
+Description=Chacal Autonomous Trading Loop
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=$(whoami)
+WorkingDirectory=$BASE_DIR
+ExecStart=/bin/bash $BASE_DIR/loop_chacal.sh
+Restart=always
+RestartSec=60
+StandardOutput=append:$BASE_DIR/chacal_service.log
+StandardError=append:$BASE_DIR/chacal_service.log
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Recargar daemon y habilitar
+sudo systemctl daemon-reload
+sudo systemctl enable chacal
+echo "✅ Servicio 'chacal' creado y habilitado (Inicio al arrancar)."
+
+echo -e "\n🏁 FINALIZANDO..."
 echo "=========================================="
 echo "⚠️  IMPORTANTE: CIERRE Y ABRA SESIÓN SSH"
 echo "   (Para que los permisos de Docker surtan efecto)"
 echo "=========================================="
 echo "Instrucciones:"
-echo "1. Suba 'comandante.py' y 'docker-compose.yml' a: $BASE_DIR"
+echo "1. Suba 'comandante.py', 'loop_chacal.sh' y 'docker-compose.yml' a: $BASE_DIR"
 echo "2. Suba sus estrategias a: $BASE_DIR/user_data/strategies/"
 echo "3. Cierre ssh y reconecte."
 echo "4. Ejecute: python3 comandante.py"

@@ -1,0 +1,43 @@
+{
+  "strategy_name": "EstrategiaChacal",
+  "params": {
+    "roi": {
+      "0": 0.191,
+      "11": 0.078,
+      "68": 0.037,
+      "161": 0
+    },
+    "stoploss": {
+      "stoploss": -0.295
+    },
+    "max_open_trades": {
+      "max_open_trades": 9
+    },
+    "buy": {
+      "buy_bb_percent": 0.362,
+      "buy_bb_width": 0.125,
+      "buy_ema_long": 82,
+      "buy_ema_short": 11,
+      "buy_macd_filter_enabled": true,
+      "buy_rsi": 32,
+      "buy_rsi_enabled": true,
+      "buy_trend_filter_enabled": false,
+      "buy_volume_factor": 0.398
+    },
+    "sell": {
+      "sell_bb_percent": 0.637,
+      "sell_rsi": 67,
+      "sell_rsi_enabled": true,
+      "trailing_stop_positive_offset_param": 0.081,
+      "trailing_stop_positive_param": 0.048
+    },
+    "trailing": {
+      "trailing_stop": true,
+      "trailing_stop_positive": 0.216,
+      "trailing_stop_positive_offset": 0.262,
+      "trailing_only_offset_is_reached": false
+    }
+  },
+  "ft_stratparam_v": 1,
+  "export_time": "2026-01-30 05:06:09.713053+00:00"
+}
