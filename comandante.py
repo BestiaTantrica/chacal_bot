@@ -228,11 +228,33 @@ def run_command(command, description):
 
 # STEPS
 def step_download_data():
-    # En Windows con docker-compose, el comando suele ser un string único o usar bash -c si es complejo.
-    # Pero aquí usamos DOCKER_COMPOSE_CMD que ya tiene 'run --rm freqtrade'.
-    # Corregimos para que sea compatible con el contenedor.
-    cmd = f"{DOCKER_COMPOSE_CMD} download-data --config {CONFIG_FILE} --pairs-file {PAIRS_FILE} --days {DAYS_TO_DOWNLOAD} -t {TIMEFRAME} --erase"
-    return run_command(cmd, "Descarga de Datos (Deep Memory)")
+    """Descarga datos basados en el régimen detectado + buffer."""
+    
+    regimen_file = "user_data/regimen_actual.json"
+    days_to_download = DAYS_TO_DOWNLOAD  # Default fallback (180)
+    
+    # Intentar leer régimen para optimizar descarga
+    if os.path.exists(regimen_file):
+        try:
+            with open(regimen_file, 'r', encoding='utf-8') as f:
+                regimen_data = json.load(f)
+            
+            periodo = regimen_data.get('periodo_recomendado', {})
+            start_date = periodo.get('inicio', '')
+            
+            if start_date:
+                # Calcular días desde la fecha de inicio del régimen hasta hoy
+                start_dt = datetime.strptime(start_date, "%Y%m%d")
+                days_diff = (datetime.now() - start_dt).days
+                
+                # Agregar buffer de 30 días adicionales para seguridad
+                days_to_download = days_diff + 30
+                log(f"Régimen detectado. Descargando {days_to_download} días (desde {start_date})", "AI")
+        except Exception as e:
+            log(f"Error leyendo régimen para download: {e}. Usando {days_to_download} días.", "WARNING")
+    
+    cmd = f"{DOCKER_COMPOSE_CMD} download-data --config {CONFIG_FILE} --pairs-file {PAIRS_FILE} --days {days_to_download} -t {TIMEFRAME} --erase"
+    return run_command(cmd, f"Descarga de Datos ({days_to_download} días)")
 
 import zipfile
 
@@ -307,12 +329,13 @@ def step_backtest(mode="basal"):
     """Ejecuta Backtest. Validation siempre es sobre datos RECIENTES (Últimos 30 días)."""
     
     extra_config = ""
-    if mode == "validation":
-        if os.path.exists(PARAMS_FILE):
-            extra_config = f"--config {PARAMS_FILE_CONTAINER}"
-        else:
-            log("No hay archivo de parámetros para validación. Abortando.", "ERROR")
-            return None
+    
+    # CAMBIO: Cargar parámetros previos SIEMPRE si existen (no solo en validation)
+    if os.path.exists(PARAMS_FILE):
+        extra_config = f"--config {PARAMS_FILE_CONTAINER}"
+        log(f"Usando parámetros optimizados de {PARAMS_FILE}", "INFO")
+    else:
+        log("No hay parámetros previos. Usando defaults de estrategia.", "WARNING")
 
     # Backtest siempre valida contra el "Presente" (Recent Regime)
     start_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%d")
@@ -371,20 +394,26 @@ def step_hyperopt():
     timerange = ""
     regimen_file = "user_data/regimen_actual.json"
     
+    # DEBUG: Verificar existencia del archivo
+    log(f"Verificando archivo de régimen: {regimen_file}", "DEBUG")
+    
     # 1. Consultar archivo de Régimen (Generado por Analista)
     if os.path.exists(regimen_file):
+        log(f"Archivo {regimen_file} encontrado. Leyendo...", "DEBUG")
         try:
             with open(regimen_file, 'r', encoding='utf-8') as f:
                 regimen_data = json.load(f)
             
+            log(f"Contenido régimen: {json.dumps(regimen_data, indent=2)}", "DEBUG")
+            
             periodo = regimen_data.get('periodo_recomendado', {})
-            start_date = periodo.get('inicio', '').replace('-', '')
-            end_date = periodo.get('fin', '').replace('-', '')
+            start_date = periodo.get('inicio', '')
+            end_date = periodo.get('fin', '')
+            
+            log(f"Fechas parseadas - Inicio: {start_date}, Fin: {end_date}", "DEBUG")
             
             if start_date and end_date:
                 # IMPORTANTE: Agregar buffer de inicio para Startup Candles (Indicadores)
-                # Como descargamos con --erase desde start_date, no hay data previa.
-                # Movemos el inicio del hyperopt 5 días adelante.
                 try:
                     start_dt = datetime.strptime(start_date, "%Y%m%d")
                     end_dt = datetime.strptime(end_date, "%Y%m%d")
@@ -398,11 +427,13 @@ def step_hyperopt():
                     log(f"Régimen Detectado: {regimen_data.get('regimen')} ({regimen_data.get('direccion')})", "AI")
                     log(f"Datos espejo brutos: {start_date}-{end_date}", "AI")
                     log(f"Timerange optimización (seguro): {start_date_optim}-{end_date_optim}", "AI")
-                except ValueError:
-                    # Si falla el parseo, usar original (riesgoso)
-                    timerange = f"--timerange {start_date}-{end_date}" 
+                    log(f"Comando timerange construido: {timerange}", "DEBUG")
+                except ValueError as ve:
+                    log(f"Error parseando fechas: {ve}. Usando fallback.", "ERROR")
+                    start_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%d")
+                    timerange = f"--timerange {start_date}-"
             else:
-                log("Fechas de periodo espejo no encontradas en json. Usando fallback.", "WARNING")
+                log("Fechas de periodo espejo vacías en JSON. Usando fallback.", "WARNING")
                 start_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%d")
                 timerange = f"--timerange {start_date}-"
                 
@@ -411,7 +442,7 @@ def step_hyperopt():
             start_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%d")
             timerange = f"--timerange {start_date}-"
     else:
-        log(f"{regimen_file} no encontrado. Ejecuta 'analista.py' primero.", "WARNING")
+        log(f"{regimen_file} no encontrado. Usando fallback a últimos 30 días.", "WARNING")
         # Fallback a últimos 30 días
         start_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%d")
         timerange = f"--timerange {start_date}-"
