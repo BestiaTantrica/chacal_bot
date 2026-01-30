@@ -18,7 +18,7 @@ from functools import reduce
 
 class EstrategiaChacal(IStrategy):
     """
-    ESTRATEGIA CHACAL V1.0 - PROTOCOLO DE SUPERVIVENCIA O.C.I.
+    ESTRATEGIA CHACAL V1.0 - PROTOCOLO DE SUPERVIVENCIA AWS
     
     Arquitectura:
     - Optimizada para instancias de 1GB RAM + 4GB SWAP
@@ -45,8 +45,8 @@ class EstrategiaChacal(IStrategy):
 
     # Trailing stop: Asegurar ganancias
     trailing_stop = True
-    trailing_stop_positive = 0.005  # Activar cuando hay +0.5%
-    trailing_stop_positive_offset = 0.01  # Comenzar a seguir en +1%
+    trailing_stop_positive = 0.005
+    trailing_stop_positive_offset = 0.01
     trailing_only_offset_is_reached = True
 
     # Run "populate_indicators()" only for new candle.
@@ -62,22 +62,30 @@ class EstrategiaChacal(IStrategy):
 
     # HYPEROPT SPACES - Optimización Bayesiana para recursos limitados
     
-    # Buy Space - Indicadores de entrada conservadores
-    buy_rsi = IntParameter(20, 40, default=30, space="buy")
+    # Buy Space - Indicadores de entrada
+    # Buy Space - Indicadores de entrada - RANGOS AMPLIADOS PARA MÁS TRADES
+    buy_rsi = IntParameter(10, 75, default=30, space="buy")
     buy_rsi_enabled = BooleanParameter(default=True, space="buy")
     
-    buy_ema_short = IntParameter(5, 20, default=9, space="buy")
-    buy_ema_long = IntParameter(20, 50, default=21, space="buy")
+    buy_ema_short = IntParameter(5, 30, default=9, space="buy")
+    buy_ema_long = IntParameter(20, 100, default=21, space="buy")
     
-    buy_volume_factor = DecimalParameter(1.0, 3.0, default=1.5, space="buy")
+    buy_volume_factor = DecimalParameter(0.1, 2.0, default=1.0, space="buy")
+    buy_bb_width = DecimalParameter(0.01, 0.20, default=0.05, space="buy") # Ancho mínimo reducido, máximo aumentado
+    buy_bb_percent = DecimalParameter(0.0, 0.95, default=0.3, space="buy") # Permitir compras en casi todo el rango bajo BB
     
+    # Filtros de Tendencia dinámicos para el Hyperopt
+    buy_trend_filter_enabled = BooleanParameter(default=False, space="buy") # Por defecto apagado para dejar entrar trades
+    buy_macd_filter_enabled = BooleanParameter(default=False, space="buy") # Por defecto apagado
+
     # Sell Space - Indicadores de salida
-    sell_rsi = IntParameter(60, 80, default=70, space="sell")
+    sell_rsi = IntParameter(50, 90, default=70, space="sell")
     sell_rsi_enabled = BooleanParameter(default=True, space="sell")
+    sell_bb_percent = DecimalParameter(0.5, 1.0, default=0.7, space="sell")
 
     # Trailing Space - Optimización de trailing stop
-    trailing_stop_positive_param = DecimalParameter(0.001, 0.02, default=0.005, space="trailing")
-    trailing_stop_positive_offset_param = DecimalParameter(0.005, 0.03, default=0.01, space="trailing")
+    trailing_stop_positive_param = DecimalParameter(0.001, 0.05, default=0.005, space="sell", optimize=True, load=True)
+    trailing_stop_positive_offset_param = DecimalParameter(0.005, 0.1, default=0.01, space="sell", optimize=True, load=True)
 
     def informative_pairs(self):
         """
@@ -95,6 +103,10 @@ class EstrategiaChacal(IStrategy):
         
         Optimización de memoria: Usa solo indicadores esenciales
         """
+        # Mapeo de parámetros de Hyperopt a atributos de la estrategia
+        # Esto permite optimizar el trailing stop sin romper la validación de tipos de Freqtrade
+        self.trailing_stop_positive = self.trailing_stop_positive_param.value
+        self.trailing_stop_positive_offset = self.trailing_stop_positive_offset_param.value
 
         # RSI - Índice de Fuerza Relativa (sobrecompra/sobreventa)
         dataframe['rsi'] = ta.RSI(dataframe, timeperiod=14)
@@ -131,28 +143,24 @@ class EstrategiaChacal(IStrategy):
     can_short: bool = True
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        """
-        Basado en indicadores de TA, popula la señal de compra (buy/long)
-        Filosofía Chacal: Entradas precisas en zonas de sobreventa
-        """
         conditions = []
         
-        # CONDICIÓN 1: RSI en sobreventa
+        # Filtro de Tendencia Principal (Opcional por Hyperopt)
+        if self.buy_trend_filter_enabled.value:
+            conditions.append(dataframe['ema_short'] > dataframe['ema_long'])
+
+        # CONDICIÓN 1: RSI
         if self.buy_rsi_enabled.value:
             conditions.append(dataframe['rsi'] < self.buy_rsi.value)
         
-        # CONDICIÓN 2: Cruce alcista de EMAs
-        conditions.append(
-            qtpylib.crossed_above(dataframe['ema_short'], dataframe['ema_long'])
-        )
+        # CONDICIÓN 2: MACD (Opcional por Hyperopt)
+        if self.buy_macd_filter_enabled.value:
+            conditions.append(dataframe['macdhist'] > 0)
         
-        # CONDICIÓN 3: MACD alcista
-        conditions.append(dataframe['macdhist'] > 0)
+        # CONDICIÓN 3: Bollinger
+        conditions.append(dataframe['bb_percent'] < self.buy_bb_percent.value)
         
-        # CONDICIÓN 4: Bollinger Low
-        conditions.append(dataframe['bb_percent'] < 0.3)
-        
-        # CONDICIÓN 5: Volumen
+        # CONDICIÓN 4: Volumen
         conditions.append(
             dataframe['volume'] > (dataframe['volume_mean'] * self.buy_volume_factor.value)
         )
@@ -171,22 +179,22 @@ class EstrategiaChacal(IStrategy):
         """
         conditions = []
         
-        # CONDICIÓN 1: RSI en sobrecompra
+        # Filtro de Tendencia Short (Opcional por Hyperopt)
+        if self.buy_trend_filter_enabled.value:
+            conditions.append(dataframe['ema_short'] < dataframe['ema_long'])
+
+        # CONDICIÓN 1: RSI
         if self.sell_rsi_enabled.value:
             conditions.append(dataframe['rsi'] > self.sell_rsi.value)
         
-        # CONDICIÓN 2: Cruce bajista de EMAs (Short cruza abajo de Long)
-        conditions.append(
-            qtpylib.crossed_below(dataframe['ema_short'], dataframe['ema_long'])
-        )
+        # CONDICIÓN 2: MACD (Opcional por Hyperopt)
+        if self.buy_macd_filter_enabled.value:
+            conditions.append(dataframe['macdhist'] < 0)
         
-        # CONDICIÓN 3: MACD bajista
-        conditions.append(dataframe['macdhist'] < 0)
+        # CONDICIÓN 3: Bollinger
+        conditions.append(dataframe['bb_percent'] > self.sell_bb_percent.value)
         
-        # CONDICIÓN 4: Bollinger High
-        conditions.append(dataframe['bb_percent'] > 0.7)
-        
-        # CONDICIÓN 5: Volumen
+        # CONDICIÓN 4: Volumen
         conditions.append(
             dataframe['volume'] > (dataframe['volume_mean'] * self.buy_volume_factor.value)
         )

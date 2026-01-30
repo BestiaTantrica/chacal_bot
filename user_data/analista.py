@@ -102,7 +102,8 @@ def find_similar_regimes(df, current_window_days=2, lookback_days=180):
     
     if df.empty: return []
 
-    # Estado actual (media de los últimos X días)
+    # Estado actual (media de los últimos 30 días - CONFIGURACIÓN DE USUARIO)
+    current_window_days = 30
     current_end_date = df['date'].iloc[-1]
     current_start_date = current_end_date - timedelta(days=current_window_days)
     
@@ -115,17 +116,16 @@ def find_similar_regimes(df, current_window_days=2, lookback_days=180):
 
     current_params = current_slice[features].mean()
     
-    print(f"\n[ANALISTA] Régimen Actual (Market Pulse):")
+    print(f"\n[ANALISTA] Régimen Actual (Últimos {current_window_days} días):")
     print(current_params)
     
-    # CAMBIO CRÍTICO: Escaneo histórico EVITANDO últimos 60 días
-    # Esto asegura que el régimen espejo NO se solape con validación (últimos 30 días)
-    history_cutoff_end = current_start_date - timedelta(days=60)  # Mínimo 60 días hacia atrás
+    # CAMBIO CRÍTICO: Excluir últimos 60 días para no encontrarnos a nosotros mismos
+    history_cutoff_end = current_start_date - timedelta(days=60)
     history_cutoff_start = history_cutoff_end - timedelta(days=lookback_days)
     
     historical_df = df[(df['date'] >= history_cutoff_start) & (df['date'] < history_cutoff_end)]
     
-    print(f"[ANALISTA] Buscando regímenes similares entre {history_cutoff_start.strftime('%Y-%m-%d')} y {history_cutoff_end.strftime('%Y-%m-%d')}")
+    print(f"[ANALISTA] Buscando espejo entre {history_cutoff_start.strftime('%Y-%m-%d')} y {history_cutoff_end.strftime('%Y-%m-%d')}")
     
     # Resample diario para búsqueda rápida
     df_daily = historical_df.set_index('date').resample('1D')[features].mean().dropna()
@@ -140,7 +140,14 @@ def find_similar_regimes(df, current_window_days=2, lookback_days=180):
     
     distances = []
     
-    for date, row in df_daily.iterrows():
+    # Búsqueda Rolling (Ventana Deslizante) sobre los datos históricos
+    # Iteramos día por día calculando la "distancia" del bloque de 30 días que termina en ese día
+    # Esto es computacionalmente más intenso pero exacto para lo que pide el usuario
+    
+    # Optimización: Usar rolling mean del dataframe histórico
+    df_rolling = df_daily.rolling(window=current_window_days).mean().dropna()
+    
+    for date, row in df_rolling.iterrows():
         hist_vec = np.array([normalize(row[col], col) for col in features])
         dist = np.linalg.norm(target_vec - hist_vec)
         distances.append({'date': date, 'distance': dist})
@@ -177,9 +184,18 @@ def get_market_regime_timeranges():
                 break
         if overlap: continue
         
-        # Periodo de entrenamiento: ~60 días brutos (quedan ~45 tras recorte)
-        start_str = (center_date - timedelta(days=30)).strftime("%Y%m%d")
-        end_str = (center_date + timedelta(days=30)).strftime("%Y%m%d")
+        # Lógica de Rango:
+        # center_date es el FIN del periodo espejo (porque usamos rolling window que fecha al final)
+        # Queremos: [Inicio Espejo] -> [Fin Espejo] + 30 Días Futuros (Validación Histórica)
+        # Inicio Espejo = center_date - 30 días
+        # Fin Espejo = center_date
+        # Fin Total = center_date + 30 días
+        
+        start_date_obj = center_date - timedelta(days=30)
+        end_date_obj = center_date + timedelta(days=30)
+        
+        start_str = start_date_obj.strftime("%Y%m%d")
+        end_str = end_date_obj.strftime("%Y%m%d")
         
         tr = f"{start_str}-{end_str}"
         timeranges.append(tr)

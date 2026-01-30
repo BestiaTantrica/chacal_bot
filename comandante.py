@@ -457,11 +457,14 @@ def step_hyperopt():
         )
 
         # Limpieza agresiva de lockfile
-        if os.path.exists("user_data/hyperopt.lock"):
-            try:
-                os.remove("user_data/hyperopt.lock")
-                log("Lockfile eliminado.", "DEBUG")
-            except: pass
+        # Limpieza agresiva de lockfile
+        # FIX FREQTRADE 2025.12: El bug borra el archivo sin chequear si existe.
+        # Solución: CREAR el archivo vacío para que Freqtrade lo encuentre y lo borre feliz.
+        try:
+            with open("user_data/hyperopt.lock", "w") as f:
+                f.write("")
+            log("Lockfile creado preventivamente (Fix 2025.12).", "DEBUG")
+        except: pass
             
         if run_command(cmd, f"Hyperopt ({epochs} Epochs)"):
             return extract_params_from_hyperopt()
