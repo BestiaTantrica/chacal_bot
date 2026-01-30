@@ -28,3 +28,10 @@ Thumbs.db
 
 user_data/hyperopt.lock
 user_data/regimen_actual.json
+
+# Chacal cleanup
+user_data/*.sqlite*
+*.bak
+update_token.py
+check_hyperopt.py
+__pycache__/
