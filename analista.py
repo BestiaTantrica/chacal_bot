@@ -44,9 +44,12 @@ def load_data(pair, timeframe):
         try:
             # Freqtrade feather format: date, open, high, low, close, volume
             df = pd.read_feather(found_path)
+            # print(f"[DEBUG] Loaded {pair} from {found_path}, rows: {len(df)}")
             return df
         except Exception as e:
             print(f"[!] Error leyendo feather {pair}: {e}")
+    else:
+        print(f"[DEBUG] Archivo NO encontrado: {found_path}")
             
     return None
 
@@ -154,6 +157,8 @@ def get_market_regime_timeranges():
     print("\n[ANALISTA] Periodos Espejo Encontrados:")
     
     used_dates = []
+    best_match = None
+
     for match in matches:
         if len(timeranges) >= 3: break
         
@@ -167,15 +172,45 @@ def get_market_regime_timeranges():
                 break
         if overlap: continue
         
-        # Periodo de entrenamiento: 1 mes
-        start_str = (center_date - timedelta(days=15)).strftime("%Y%m%d")
-        end_str = (center_date + timedelta(days=15)).strftime("%Y%m%d")
+        # Periodo de entrenamiento: ~60 días brutos (quedan ~45 tras recorte)
+        start_str = (center_date - timedelta(days=30)).strftime("%Y%m%d")
+        end_str = (center_date + timedelta(days=30)).strftime("%Y%m%d")
         
         tr = f"{start_str}-{end_str}"
         timeranges.append(tr)
         used_dates.append(center_date)
+        
+        if best_match is None:
+            best_match = {
+                "inicio": start_str,
+                "fin": end_str,
+                "score": match['distance']
+            }
+
         print(f"   > Fecha: {center_date.strftime('%Y-%m-%d')} | Dist: {match['distance']:.4f} --> {tr}")
         
+    # Guardar resultado para Comandante
+    if best_match:
+        regimen_path = "user_data/regimen_actual.json"
+        output_data = {
+            "periodo_recomendado": {
+                "inicio": best_match['inicio'],
+                "fin": best_match['fin']
+            },
+            "regimen": "Espejo Histórico",
+            "direccion": "Neutro", # Pendiente: Lógica de tendencia
+            "meta": {
+                "distance": best_match['score'],
+                "generated": datetime.now().isoformat()
+            }
+        }
+        try:
+            with open(regimen_path, 'w', encoding='utf-8') as f:
+                json.dump(output_data, f, indent=4)
+            print(f"[ANALISTA] Resultado guardado en {regimen_path}")
+        except Exception as e:
+            print(f"[!] Error guardando json: {e}")
+
     return timeranges
 
 if __name__ == "__main__":
