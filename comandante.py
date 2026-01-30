@@ -458,6 +458,9 @@ def step_hyperopt():
     for i, epochs in enumerate(epoch_ladder):
         log(f"Hyperopt: Intentando con {epochs} épocas...", "AI")
         
+        # WORKAROUND: Crear directorio hyperopt_results si no existe
+        os.makedirs("user_data/hyperopt_results", exist_ok=True)
+        
         # Reconstruimos comando con las épocas actuales
         cmd = (
             f"{DOCKER_COMPOSE_CMD} hyperopt "
@@ -491,6 +494,9 @@ def step_hyperopt():
     log("ACTIVANDO PROTOCOLO DE EMERGENCIA: Hyperopt Mini.", "WARNING")
     # Reducimos a 10 Epochs y 7 días de datos para minimizar carga
     mini_timerange = (datetime.now() - timedelta(days=7)).strftime("%Y%m%d")
+    
+    # WORKAROUND: Crear directorio hyperopt_results
+    os.makedirs("user_data/hyperopt_results", exist_ok=True)
     
     cmd_mini = (
         f"{DOCKER_COMPOSE_CMD} hyperopt "

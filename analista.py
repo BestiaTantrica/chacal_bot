@@ -97,7 +97,7 @@ def build_market_index(pairs):
     return market_index
 
 def find_similar_regimes(df, current_window_days=2, lookback_days=180):
-    """Encuentra periodos históricos similares."""
+    """Encuentra periodos históricos similares EN EL PASADO LEJANO."""
     features = ['volatility', 'trend_score', 'rel_volume']
     
     if df.empty: return []
@@ -118,9 +118,14 @@ def find_similar_regimes(df, current_window_days=2, lookback_days=180):
     print(f"\n[ANALISTA] Régimen Actual (Market Pulse):")
     print(current_params)
     
-    # Escaneo histórico (evitando el periodo reciente)
-    history_cutoff = current_start_date - timedelta(days=5)
-    historical_df = df[df['date'] < history_cutoff]
+    # CAMBIO CRÍTICO: Escaneo histórico EVITANDO últimos 60 días
+    # Esto asegura que el régimen espejo NO se solape con validación (últimos 30 días)
+    history_cutoff_end = current_start_date - timedelta(days=60)  # Mínimo 60 días hacia atrás
+    history_cutoff_start = history_cutoff_end - timedelta(days=lookback_days)
+    
+    historical_df = df[(df['date'] >= history_cutoff_start) & (df['date'] < history_cutoff_end)]
+    
+    print(f"[ANALISTA] Buscando regímenes similares entre {history_cutoff_start.strftime('%Y-%m-%d')} y {history_cutoff_end.strftime('%Y-%m-%d')}")
     
     # Resample diario para búsqueda rápida
     df_daily = historical_df.set_index('date').resample('1D')[features].mean().dropna()
