@@ -39,11 +39,8 @@ CURRENT_STEP = "Inicializando..."
 LAST_UPDATE_ID = 0 
 
 # Importar Inteligencia
-try:
-    import analista
-except ImportError:
-    print("[!] ADVERTENCIA: Módulo 'analista.py' no encontrado.")
-    analista = None
+# ANALISTA se ejecuta vía Docker ahora, no importado localmente
+analista = None
 
 # UTILS
 def log(msg, level="INFO"):
@@ -227,34 +224,19 @@ def run_command(command, description):
         return False
 
 # STEPS
+def step_analyze_regime():
+    """Ejecuta analista.py DENTRO del contenedor para generar régimen."""
+    # Analista debe estar en user_data/analista.py para ser visible
+    cmd = f"{DOCKER_COMPOSE_CMD} python /freqtrade/user_data/analista.py"
+    return run_command(cmd, "Análisis de Régimen de Mercado (AI)")
+
 def step_download_data():
-    """Descarga datos basados en el régimen detectado + buffer."""
-    
-    regimen_file = "user_data/regimen_actual.json"
-    days_to_download = DAYS_TO_DOWNLOAD  # Default fallback (180)
-    
-    # Intentar leer régimen para optimizar descarga
-    if os.path.exists(regimen_file):
-        try:
-            with open(regimen_file, 'r', encoding='utf-8') as f:
-                regimen_data = json.load(f)
-            
-            periodo = regimen_data.get('periodo_recomendado', {})
-            start_date = periodo.get('inicio', '')
-            
-            if start_date:
-                # Calcular días desde la fecha de inicio del régimen hasta hoy
-                start_dt = datetime.strptime(start_date, "%Y%m%d")
-                days_diff = (datetime.now() - start_dt).days
-                
-                # Agregar buffer de 30 días adicionales para seguridad
-                days_to_download = days_diff + 30
-                log(f"Régimen detectado. Descargando {days_to_download} días (desde {start_date})", "AI")
-        except Exception as e:
-            log(f"Error leyendo régimen para download: {e}. Usando {days_to_download} días.", "WARNING")
+    """Descarga Deep Memory (210 días) para permitir análisis histórico."""
+    # Necesitamos historial largo para que el analista encuentre patrones antiguos
+    days_to_download = 210 
     
     cmd = f"{DOCKER_COMPOSE_CMD} download-data --config {CONFIG_FILE} --pairs-file {PAIRS_FILE} --days {days_to_download} -t {TIMEFRAME} --erase"
-    return run_command(cmd, f"Descarga de Datos ({days_to_download} días)")
+    return run_command(cmd, f"Descarga de Datos (Deep Memory {days_to_download} días)")
 
 import zipfile
 
@@ -604,10 +586,13 @@ def run_cycle():
         log("Señal de PARADA detectada. Abortando.", "WARNING")
         return
     
-    # 1. Download
+    # 1. Download (Deep Memory)
     if not step_download_data(): return 
     
-    # 2. Backtest Basal
+    # 2. Análisis de Régimen (Genera user_data/regimen_actual.json)
+    step_analyze_regime()
+    
+    # 3. Backtest Basal
     baseline = step_backtest("basal")
     
     if baseline:
