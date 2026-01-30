@@ -29,37 +29,53 @@ if (-not (Test-Path $Key)) {
 Write-Host "[1/4] Creando directorio remoto..."
 ssh -i $Key -o StrictHostKeyChecking=no $User@$Ip "mkdir -p $Dest/user_data/strategies"
 
-# 2. Subir Archivos (SCP)
-Write-Host "[2/4] Subiendo archivos..."
-$Files = @(
+# 2. Preparar Configuración con Secretos (LOCAL TEMPORAL)
+Write-Host "[2/4] Preparando configuración con secretos..."
+$EnvContent = Get-Content ".env.deployment" -Raw
+$BinanceKey = [regex]::Match($EnvContent, "BINANCE_API_KEY=(.*)").Groups[1].Value.Trim()
+$BinanceSecret = [regex]::Match($EnvContent, "BINANCE_SECRET_KEY=(.*)").Groups[1].Value.Trim()
+
+# Si no está explícito, buscar el token de Telegram (línea con :)
+$TelegramToken = [regex]::Match($EnvContent, "([0-9]{8,10}:[a-zA-Z0-9_-]{35})").Groups[1].Value.Trim()
+
+$ConfigPath = "user_data/config_chacal_aws.json"
+$ConfigContent = Get-Content $ConfigPath -Raw
+$ConfigContent = $ConfigContent -replace "PLACEHOLDER_BINANCE_KEY", $BinanceKey
+$ConfigContent = $ConfigContent -replace "PLACEHOLDER_BINANCE_SECRET", $BinanceSecret
+$ConfigContent = $ConfigContent -replace "PLACEHOLDER_TELEGRAM_TOKEN", $TelegramToken
+
+$TempConfig = "user_data/config_chacal_aws.json.tmp"
+$ConfigContent | Out-File -FilePath $TempConfig -Encoding utf8
+
+# 3. Subir Archivos (SCP)
+Write-Host "[3/4] Subiendo archivos..."
+$FilesToAdd = @(
     "setup_aws_chacal.sh", 
     "comandante.py", 
     "docker-compose.yml",
     "user_data/strategies/EstrategiaChacal.py",
-    "user_data/config_chacal_aws.json",
     "user_data/static_pairs.json"
 )
 
-foreach ($File in $Files) {
+# Primero los fijos
+foreach ($File in $FilesToAdd) {
     if (Test-Path $File) {
-        if ($File -like "user_data/*") {
-             scp -i $Key $File $User@$Ip`:$Dest/$File
-        } else {
-             scp -i $Key $File $User@$Ip`:$Dest/
-        }
-    } else {
-        Write-Warning "Archivo no encontrado para subir: $File"
+        scp -i $Key $File $User@$Ip`:$Dest/
     }
 }
 
-# 3. Permisos de Ejecución
-Write-Host "[3/4] Ajustando permisos..."
-ssh -i $Key $User@$Ip "chmod +x $Dest/setup_aws_chacal.sh"
+# Subir la config temporal como la real en el destino
+scp -i $Key $TempConfig $User@$Ip`:$Dest/$ConfigPath
+Remove-Item $TempConfig
 
-# 4. Ejecución del Setup
-Write-Host "[4/4] EJECUTANDO SETUP REMOTO (Esto puede tardar)..." -ForegroundColor Yellow
+# 4. Actualizar Servidor y Permisos
+Write-Host "[4/4] Actualizando servidor y ajustando permisos..."
+ssh -i $Key $User@$Ip "sudo yum update -y && chmod +x $Dest/setup_aws_chacal.sh"
+
+# 5. Ejecución del Setup
+Write-Host "🚀 EJECUTANDO SETUP REMOTO..." -ForegroundColor Yellow
 ssh -i $Key $User@$Ip "cd $Dest && sudo bash setup_aws_chacal.sh"
 
-Write-Host "`n✅ DESPLIEGUE FINALIZADO." -ForegroundColor Green
-Write-Host "Para conectar: ssh -i $Key $User@$Ip"
+Write-Host "`n✅ PROTOCOLO CHACAL COMPLETADO." -ForegroundColor Green
+Write-Host "IP AWS: $Ip"
 Write-Host "Para iniciar bot: python3 $Dest/comandante.py"
