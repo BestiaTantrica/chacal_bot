@@ -1,14 +1,3 @@
-# Freqtrade Configuration (Secrets)
-config_chacal_aws.json
-user_data/config_backtest.json
-user_data/config.json
-.env
-
-# Freqtrade Data and Results
-user_data/data/*
-user_data/backtest_results/*
-user_data/hyperopt_results/*
-user_data/logs/*
 
 # Python
 __pycache__/
