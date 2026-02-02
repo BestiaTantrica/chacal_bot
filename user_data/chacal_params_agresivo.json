@@ -1,0 +1,39 @@
+{
+    "params": {
+        "roi": {
+            "0": 0.02,
+            "30": 0.015,
+            "60": 0.01,
+            "120": 0.005
+        },
+        "stoploss": {
+            "stoploss": -0.025
+        },
+        "max_open_trades": {
+            "max_open_trades": 9
+        },
+        "buy": {
+            "buy_bb_percent": 0.35,
+            "buy_bb_width": 0.01,
+            "buy_ema_long": 50,
+            "buy_ema_short": 21,
+            "buy_macd_filter_enabled": false,
+            "buy_rsi": 55,
+            "buy_rsi_enabled": true,
+            "buy_trend_filter_enabled": false,
+            "buy_volume_factor": 0.3,
+            "oi_threshold": 0.2
+        },
+        "sell": {
+            "sell_bb_percent": 0.65,
+            "sell_rsi": 70,
+            "sell_rsi_enabled": true
+        },
+        "trailing": {
+            "trailing_stop": true,
+            "trailing_stop_positive": 0.01,
+            "trailing_stop_positive_offset": 0.015,
+            "trailing_only_offset_is_reached": true
+        }
+    }
+}

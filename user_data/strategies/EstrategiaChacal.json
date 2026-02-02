@@ -2,42 +2,41 @@
   "strategy_name": "EstrategiaChacal",
   "params": {
     "roi": {
-      "0": 0.191,
-      "11": 0.078,
-      "68": 0.037,
-      "161": 0
+      "0": 0.02,
+      "30": 0.015,
+      "60": 0.008,
+      "120": 0.003
     },
     "stoploss": {
-      "stoploss": -0.295
+      "stoploss": -0.015
     },
     "max_open_trades": {
       "max_open_trades": 9
     },
     "buy": {
-      "buy_bb_percent": 0.152,
-      "buy_bb_width": 0.017,
-      "buy_ema_long": 64,
-      "buy_ema_short": 26,
-      "buy_macd_filter_enabled": true,
-      "buy_rsi": 39,
+      "buy_bb_percent": 0.5,
+      "buy_bb_width": 0.02,
+      "buy_ema_long": 50,
+      "buy_ema_short": 20,
+      "buy_macd_filter_enabled": false,
+      "buy_rsi": 42,
       "buy_rsi_enabled": true,
       "buy_trend_filter_enabled": false,
-      "buy_volume_factor": 0.331
+      "buy_volume_factor": 0.5,
+      "oi_threshold": 0.3
     },
     "sell": {
-      "sell_bb_percent": 0.972,
-      "sell_rsi": 73,
-      "sell_rsi_enabled": true,
-      "trailing_stop_positive_offset_param": 0.019,
-      "trailing_stop_positive_param": 0.006
+      "sell_bb_percent": 0.55,
+      "sell_rsi": 65,
+      "sell_rsi_enabled": true
     },
     "trailing": {
       "trailing_stop": true,
-      "trailing_stop_positive": 0.333,
-      "trailing_stop_positive_offset": 0.429,
-      "trailing_only_offset_is_reached": false
+      "trailing_stop_positive": 0.008,
+      "trailing_stop_positive_offset": 0.012,
+      "trailing_only_offset_is_reached": true
     }
   },
   "ft_stratparam_v": 1,
-  "export_time": "2026-01-30 06:53:35.911003+00:00"
+  "export_time": "2026-01-31 07:55:00.000000+00:00"
 }
