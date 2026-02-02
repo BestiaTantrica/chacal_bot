@@ -9,7 +9,7 @@
     .\desplegar_aws.ps1 -Ip 12.34.56.78
 #>
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [string]$Ip
 )
 
@@ -53,6 +53,7 @@ $FilesToAdd = @(
     "setup_aws_chacal.sh", 
     "comandante.py", 
     "docker-compose.yml",
+    "loop_chacal.sh",
     "user_data/strategies/EstrategiaChacal.py",
     "user_data/static_pairs.json"
 )

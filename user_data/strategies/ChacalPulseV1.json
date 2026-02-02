@@ -1,0 +1,29 @@
+{
+  "strategy_name": "ChacalPulseV1",
+  "params": {
+    "roi": {
+      "0": 0.008,
+      "5": 0.004,
+      "15": 0.002,
+      "30": 0.001
+    },
+    "stoploss": {
+      "stoploss": -0.02
+    },
+    "trailing": {
+      "trailing_stop": true,
+      "trailing_stop_positive": 0.002,
+      "trailing_stop_positive_offset": 0.005,
+      "trailing_only_offset_is_reached": true
+    },
+    "max_open_trades": {
+      "max_open_trades": 3
+    },
+    "buy": {
+      "pulse_change": 0.001,
+      "v_factor": 2.757
+    }
+  },
+  "ft_stratparam_v": 1,
+  "export_time": "2026-02-01 09:41:07.935603+00:00"
+}

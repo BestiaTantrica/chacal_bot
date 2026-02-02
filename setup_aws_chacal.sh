@@ -64,7 +64,7 @@ fi
 
 # 4. PREPARACIÓN DE DIRECTORIO
 echo -e "\n[3/5] 📂 Preparando Terreno..."
-BASE_DIR="$HOME/chacal_bot"
+BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 mkdir -p $BASE_DIR/user_data/strategies $BASE_DIR/user_data/data
 cd $BASE_DIR
 

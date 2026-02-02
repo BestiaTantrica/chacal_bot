@@ -80,15 +80,4 @@ AWS_USER=ec2-user
 AWS_KEY=llave-sao-paulo.pem
 AWS_DEST=/home/ec2-user/chacal_bot
 
-# --- BINANCE API ---
-
-BINANCE_API_KEY=2a9MJaipSfFD0JuraWIdsGxct9VjFXwKe8rCvstV0zvVwSc12vZbTjgQW76bFjkA
-BINANCE_SECRET_KEY=BVmyGezpSEIGic7GrFrY2i3R96xJkzMb70mAf077c2G2tx8aIgFiMMpOCCpBJXTs
-
-# --- WORKFLOW ---
-
-# 1. PC: Editar archivos localmente
-
-# 2. GIT: git add . && git commit -m "mensaje" && git push
-
-# 3. SERVER: Ejecutar desplegar_aws.ps1 -Ip $AWS_IP
+# LOS DATOS UTILES Y SECRETOS: EN .env.deployment DENTRO DE LA CARPETA STRATEGIES
