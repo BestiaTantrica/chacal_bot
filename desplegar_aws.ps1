@@ -45,7 +45,9 @@ $ConfigContent = $ConfigContent -replace "PLACEHOLDER_BINANCE_SECRET", $BinanceS
 $ConfigContent = $ConfigContent -replace "PLACEHOLDER_TELEGRAM_TOKEN", $TelegramToken
 
 $TempConfig = "user_data/config_chacal_aws.json.tmp"
-$ConfigContent | Out-File -FilePath $TempConfig -Encoding utf8
+# FIX: Usar UTF-8 SIN BOM para evitar error de parseo en Freqtrade
+$Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+[System.IO.File]::WriteAllText($TempConfig, $ConfigContent, $Utf8NoBomEncoding)
 
 # 3. Subir Archivos (SCP)
 Write-Host "[3/4] Subiendo archivos..."

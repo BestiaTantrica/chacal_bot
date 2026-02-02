@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """
-COMANDANTE CHACAL - LOCAL AUTOMATION V2.0
-Orquestador de ciclo de vida Freqtrade para entornos Locales.
+COMANDANTE CHACAL - PROTOCOLO DE SUPERVIVENCIA REAL V10.0
+Orquestador de ciclo de vida Freqtrade para entornos de alta volatilidad.
 
-Filosofía:
-1. Mide (Backtest Basal)
-2. Mejora (Hyperopt)
-3. Valida (Backtest Validación)
-4. Despliega (Dry Run)
+FILOSOFÍA DE HIERRO:
+1. "Ser Rentable": La única ley. Si el balance baja, el bot está fallando.
+2. MEJORA CONTINUA REAL: No hay supuestos. El bot analiza datos locales y ajusta su dirección.
+3. CERO CHAMUYO: Se eliminan las simulaciones de régimen. Todo es basado en .feather históricos.
 
 Uso: python comandante.py --action [cycle|download|backtest|hyperopt]
 """
@@ -20,6 +19,12 @@ import argparse
 import time
 import glob
 from datetime import datetime, timedelta
+import pathlib
+
+# PATHS ABSOLUTOS (Garantía de ejecución remota)
+BASE_DIR = pathlib.Path(__file__).parent.resolve()
+USER_DATA_DIR = BASE_DIR / "user_data"
+CONFIG_FILE_PATH = BASE_DIR / "config_chacal_aws.json"
 
 # CONFIGURACIÓN GLOBAL
 STRATEGY_NAME = "EstrategiaChacal"
@@ -28,11 +33,12 @@ PARAMS_FILE = "user_data/chacal_params.json" # Archivo generado dinámicamente
 PARAMS_FILE_CONTAINER = "/freqtrade/user_data/chacal_params.json"
 DEPLOY_CONFIG_FILE = "config_chacal_aws.json" # Archivo de prod en RAIZ del bot
 DOCKER_COMPOSE_CMD = "docker compose run --rm freqtrade"
-DAYS_TO_DOWNLOAD = 180 # "Memoria Táctica" (6 meses)
+DAYS_TO_DOWNLOAD = 30 # Fase 2: Memoria Táctica (Actual)
 TIMEFRAME = "5m"
 PAIRS_FILE = "/freqtrade/user_data/static_pairs.json"
-CPU_CORES = 4 
-EPOCHS = 1000 
+CPU_CORES = 4
+EPOCHS = 100 # Modo Pruebas (Original: 1000)
+KNOWLEDGE_BASE_FILE = BASE_DIR / "user_data" / "knowledge_base.json"
 
 # Estado Global
 CURRENT_STEP = "Inicializando..."
@@ -48,7 +54,8 @@ def log(msg, level="INFO"):
     print(f"[{timestamp}] [{level}] [CHACAL] {msg}")
     
     # Notificar errores críticos o éxitos al Telegram si corresponde
-    if level in ["ERROR", "SUCCESS", "START", "AI"]:
+    # V8.0: Agregado STATS para visibilidad de Profit/Trades
+    if level in ["ERROR", "SUCCESS", "START", "AI", "STATS"]:
         send_telegram_msg(f"[{level}] {msg}")
 
 def send_telegram_msg(msg):
@@ -65,9 +72,10 @@ def send_telegram_msg(msg):
                     
                     if token and chat_id:
                         url = f"https://api.telegram.org/bot{token}/sendMessage"
+                        escaped_msg = msg.replace('_', '\\_')
                         payload = {
                             "chat_id": chat_id,
-                            "text": f"🐺 *CHACAL REPORT* 🐺\n\n{msg}",
+                            "text": f"🐺 *CHACAL REPORT* 🐺\n\n{escaped_msg}",
                             "parse_mode": "Markdown"
                         }
                         # Usar requests si está disponible, sino curl (fallback es lo mejor en entornos mínimos)
@@ -142,170 +150,147 @@ def check_telegram_commands():
                 else:
                     send_telegram_msg("⚠️ No se pudo obtener balance. ¿Está DRY RUN activo?")
             except Exception as e:
-                send_telegram_msg(f"⚠️ Error obteniendo balance: {str(e)[:100]}")
-        elif last_msg == '/stop':
-            send_telegram_msg("🛑 **DETENIENDO SISTEMA**\nEl ciclo terminará tras el paso actual.")
-            with open("STOP_SIGNAL", "w") as f: f.write("STOP")
-        elif last_msg == '/skip':
-             send_telegram_msg("⏭ **SALTANDO PASO**\nIntentando abortar proceso actual...")
-             with open("SKIP_SIGNAL", "w") as f: f.write("SKIP")
-            
+                send_telegram_msg(f"⚠️ Error consultando balance: {e}")
     except Exception as e:
-        print(f"[!] Error chequeando comandos: {e}")
+        print(f"[!] Error en check_telegram_commands: {e}")
 
-def run_command(command, description):
-    """Ejecuta un comando de sistema con salida en tiempo real."""
+def run_command(cmd, task_name="Task"):
+    """Ejecuta un comando y reporta éxito/fallo."""
     global CURRENT_STEP
-    CURRENT_STEP = description
-    
-    log(f"Iniciando: {description}", "ROCKET")
-    log(f"CMD: {command}", "DEBUG")
-    
-    log(f"CMD: {command}", "DEBUG")
-    
+    CURRENT_STEP = task_name
     start_time = time.time()
-    last_tg_check = time.time()
-    try:
-        # Usamos Popen para streaming de salida real
-        # CRÍTICO: encoding UTF-8 explícito para evitar errores charmap en Windows
-        process = subprocess.Popen(
-            command, 
-            shell=True, 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.STDOUT, # Unificar stderr en stdout
-            encoding='utf-8',
-            errors='replace',  # Reemplazar caracteres no decodificables con '?' en lugar de fallar
-            bufsize=1,  # Line buffered
-        )
-        
-        # Leer salida línea a línea mientras el proceso corre
-        while True:
-            output = process.stdout.readline()
-            if output == '' and process.poll() is not None:
-                break
-            if output:
-                try:
-                    print(output, end='')  # Imprimir sin añadir newline extra
-                    sys.stdout.flush()  # Forzar flush inmediato
-                except UnicodeEncodeError:
-                    # Fallback para consolas Windows limitadas (charmap)
-                    try:
-                        print(output.encode('ascii', 'replace').decode('ascii'), end='')
-                        sys.stdout.flush()
-                    except:
-                        pass # Si falla todo, silenciar para no romper el flujo
-            
-            # CHECKPOINT: Telegram Check durante la ejecución
-            # Para no saturar, chequeamos cada X líneas o tiempo. 
-            # Simplificación: Chequear siempre que haya output podría ser mucho, 
-            # pero dado el buffer, está bien. Mejor usar un timer simple.
-            if time.time() - last_tg_check > 10: # Cada 10s
-                check_telegram_commands()
-                last_tg_check = time.time()
-                
-                if os.path.exists("SKIP_SIGNAL"):
-                    log("Comando SKIP recibido. Terminando proceso actual...", "WARNING")
-                    process.terminate()
-                    os.remove("SKIP_SIGNAL")
-                    break
-             
-        rc = process.poll()
-        duration = round(time.time() - start_time, 2)
-        
-        if rc == 0:
-            log(f"Finalizado: {description} ({duration}s)", "SUCCESS")
-            return True
-        else:
-            log(f"ERROR en {description}. Code: {rc}", "ERROR")
-            return False
-            
-    except Exception as e:
-        log(f"EXCEPCIÓN CRITICA en {description}: {e}", "ERROR")
-        return False
-
-# STEPS
-def step_analyze_regime():
-    """Ejecuta analista.py DENTRO del contenedor para generar régimen."""
-    # Analista debe estar en user_data/analista.py para ser visible
-    cmd = f"{DOCKER_COMPOSE_CMD} python /freqtrade/user_data/analista.py"
-    return run_command(cmd, "Análisis de Régimen de Mercado (AI)")
-
-def step_download_data():
-    """Descarga Deep Memory (210 días) para permitir análisis histórico."""
-    # Necesitamos historial largo para que el analista encuentre patrones antiguos
-    days_to_download = 210 
     
-    cmd = f"{DOCKER_COMPOSE_CMD} download-data --config {CONFIG_FILE} --pairs-file {PAIRS_FILE} --days {days_to_download} -t {TIMEFRAME} --erase"
-    return run_command(cmd, f"Descarga de Datos (Deep Memory {days_to_download} días)")
-
-import zipfile
-
-def get_backtest_result(filename):
-    """Parsea el resultado del backtest (json o zip) con reintentos para robustez."""
-    max_retries = 3
-    for i in range(max_retries):
-        try:
-            last_result_path = "user_data/backtest_results/.last_result.json"
-            if not os.path.exists(last_result_path):
-                return None
+    log(f"Iniciando: {task_name}", "ROCKET" if "Download" in task_name else "INFO")
+    log(f"CMD: {cmd}", "DEBUG")
+    
+    try:
+        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding='utf-8', errors='ignore')
+        
+        # Monitoreo en tiempo real (opcional para logs locales)
+        output = ""
+        while True:
+            line = process.stdout.readline()
+            if not line: break
+            output += line
+            # Opcional: print(line.strip()) 
             
-            # Verificar si el archivo tiene contenido
-            if os.path.getsize(last_result_path) == 0:
-                log(f"Esperando escritura de .last_result.json (Intento {i+1})...", "DEBUG")
-                time.sleep(1)
-                continue
+        process.wait()
+        duration = time.time() - start_time
+        
+        if process.returncode == 0:
+            log(f"Finalizado: {task_name} ({duration:.2f}s)", "SUCCESS")
+            return True, output
+        else:
+            log(f"FALLO: {task_name} (Code: {process.returncode})", "ERROR")
+            # Loguear parte del error para debug
+            log(f"Error Log: {output[-500:]}", "DEBUG")
+            return False, output
+    except Exception as e:
+        log(f"Excepción en {task_name}: {e}", "ERROR")
+        return False, ""
 
-            with open(last_result_path, 'r', encoding='utf-8', errors='ignore') as f:
-                content = f.read().strip()
-                if not content:
-                    continue
-                pointer = json.loads(content)
-                res_file = pointer['latest_backtest']
-                latest_path = os.path.join("user_data", "backtest_results", res_file)
-                
-            if not os.path.exists(latest_path) or os.path.getsize(latest_path) == 0:
-                 log(f"Esperando archivo de resultados {latest_path}...", "DEBUG")
-                 time.sleep(1)
-                 continue
+def step_analyze_regime():
+    """Lanzar el script analista vía Docker."""
+    cmd = f"{DOCKER_COMPOSE_CMD} python /freqtrade/user_data/analista.py"
+    success, _ = run_command(cmd, "Análisis de Régimen de Mercado (AI)")
+    return success
 
-            # Manejar formato ZIP (Nuevo en Freqtrade) o JSON directo
-            if res_file.endswith('.zip'):
-                with zipfile.ZipFile(latest_path, 'r') as zip_ref:
-                    # El JSON dentro del ZIP suele tener el mismo nombre base
-                    json_filename = res_file.replace('.zip', '.json')
-                    if json_filename in zip_ref.namelist():
-                        with zip_ref.open(json_filename) as f:
-                            data = json.load(f)
-                    else:
-                        # Si no coincide el nombre, buscar cualquier .json
-                        json_files = [f for f in zip_ref.namelist() if f.endswith('.json')]
-                        if json_files:
-                            with zip_ref.open(json_files[0]) as f:
-                                data = json.load(f)
-                        else:
-                            log(f"No se encontró JSON dentro del ZIP {res_file}", "ERROR")
-                            return None
-            else:
-                with open(latest_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    data = json.load(f)
-                
-            # Extraer métricas de la estrategia
-            stats = data['strategy'][STRATEGY_NAME]
-            return {
-                'profit_total': stats['profit_total'],
-                'profit_factor': stats['profit_factor'],
-                'win_rate': stats['wins'] / stats['total_trades'] if stats['total_trades'] > 0 else 0,
-                'total_trades': stats['total_trades']
-            }
-        except json.JSONDecodeError:
-             log(f"Error decodificando JSON (Intento {i+1})...", "WARNING")
-             time.sleep(1)
-        except Exception as e:
-            log(f"Error leyendo resultados backtest: {e}", "WARNING")
-            time.sleep(1)
+def step_download_data(timerange=None):
+    """
+    Descarga Quirúrgica: 30d Basal + Espejo Histórico Dinámico.
+    """
+    # 1. Descarga Basal (Últimos 30 días) siempre necesaria para validación
+    log(f"Descargando datos Basales (últimos {DAYS_TO_DOWNLOAD} días)...", "INFO")
+    cmd_basal = f"{DOCKER_COMPOSE_CMD} download-data --config {CONFIG_FILE} --pairs-file {PAIRS_FILE} --days {DAYS_TO_DOWNLOAD} -t {TIMEFRAME} --erase"
+    res_basal, _ = run_command(cmd_basal, "Descarga Basal (30d)")
+    
+    # 2. Descarga Espejo (Si se proporciona un timerange específico)
+    if timerange:
+        log(f"Fase IQ: Descargando periodo análogo {timerange}...", "AI")
+        # Aseguramos exchange binance y modo futures
+        cmd_mirror = f"{DOCKER_COMPOSE_CMD} download-data --exchange binance --trading-mode futures --pairs-file {PAIRS_FILE} --timerange {timerange} -t {TIMEFRAME} --prepend"
+        res_mirror, _ = run_command(cmd_mirror, f"Descarga Análogo ({timerange})")
+        return res_basal and res_mirror
             
-    log("No se pudo leer el resultado del backtest tras varios intentos.", "ERROR")
-    return None
+    return res_basal
+
+def get_backtest_result(specific_path=None):
+    """Busca el resultado del backtest más reciente o uno específico."""
+    
+    target_file = None
+    log(f"Iniciando búsqueda de resultados... Path específico: {specific_path}", "DEBUG")
+    
+    if specific_path:
+        clean_path = specific_path.strip().replace('/freqtrade/', '')
+        local_path = BASE_DIR / clean_path
+        
+        # Intentar con .json y .zip por si acaso
+        for ext in ['', '.zip', '.json']:
+            trial_path = str(local_path) + ext if not str(local_path).endswith(ext) else str(local_path)
+            if os.path.exists(trial_path):
+                target_file = trial_path
+                log(f"Encontrado vía path exacto: {target_file}", "DEBUG")
+                break
+            
+    if not target_file:
+        # Fallback original: buscar el ultimo archivo
+        results_dir = BASE_DIR / "user_data/backtest_results"
+        # Buscar .json y .zip
+        list_of_files = glob.glob(f'{results_dir}/*.json') + glob.glob(f'{results_dir}/*.zip')
+        
+        # Filtrar meta y last_result
+        list_of_files = [f for f in list_of_files if 'backtest-result-' in os.path.basename(f) and not f.endswith('.meta.json')]
+        
+        if list_of_files:
+            target_file = max(list_of_files, key=os.path.getctime)
+            log(f"Encontrado vía fallback (más reciente): {target_file}", "DEBUG")
+    
+    if not target_file:
+        log("No se encontró ningún archivo de resultados de backtest.", "ERROR")
+        return None
+
+    try:
+        log(f"Abriendo archivo: {target_file}", "DEBUG")
+        data = None
+        
+        # Si el archivo termina en .zip
+        if target_file.endswith('.zip'):
+            import zipfile
+            with zipfile.ZipFile(target_file, 'r') as zip_ref:
+                # Buscar específicamente el JSON que contiene 'strategy'
+                for res_file in zip_ref.namelist():
+                    if res_file.endswith('.json'):
+                        with zip_ref.open(res_file) as f:
+                            try:
+                                candidate = json.load(f)
+                                # Verificar que tenga la estructura correcta
+                                if 'strategy' in candidate:
+                                    data = candidate
+                                    log(f"Encontrado JSON con 'strategy': {res_file}", "DEBUG")
+                                    break
+                            except:
+                                continue
+        else:
+            with open(target_file, 'r', encoding='utf-8', errors='ignore') as f:
+                data = json.load(f)
+        
+        if data is None:
+            log("No se encontró JSON válido con 'strategy' en el archivo.", "ERROR")
+            return None
+            
+        # Extraer métricas de la estrategia
+        stats = data['strategy'][STRATEGY_NAME]
+        res = {
+            'profit_total': stats['profit_total'],
+            'profit_factor': stats['profit_factor'],
+            'win_rate': stats['wins'] / stats['total_trades'] if stats['total_trades'] > 0 else 0,
+            'total_trades': stats['total_trades']
+        }
+        log(f"Resultado cargado: Profit {res['profit_total']:.2%}, Trades {res['total_trades']}", "DEBUG")
+        return res
+    except Exception as e:
+        log(f"Error procesando {target_file}: {e}", "ERROR")
+        return None
 
 def step_backtest(mode="basal"):
     """Ejecuta Backtest. Validation siempre es sobre datos RECIENTES (Últimos 30 días)."""
@@ -329,8 +314,24 @@ def step_backtest(mode="basal"):
         f"--timerange={start_date}- "
     )
     
-    if run_command(cmd, f"Backtest ({mode.upper()})"):
-        return get_backtest_result(f"backtest_{mode}")
+    success, output = run_command(cmd, f"Backtest ({mode.upper()})")
+    
+    if success:
+        # Intentar extraer el nombre del archivo del output
+        import re
+        
+        # Primero limpiar colores ANSI (Freqtrade usa muchos colores)
+        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+        clean_output = ansi_escape.sub('', output)
+        
+        # Patrón típico: "Backtest result stored in /freqtrade/user_data/backtest_results/backtest-result-..."
+        match = re.search(r"Backtest result stored in ([\w/.-]+)", clean_output)
+        if match:
+             specific_path = match.group(1)
+             return get_backtest_result(specific_path=specific_path)
+             
+        # Fallback silencioso
+        return get_backtest_result() 
     return None
 
 def extract_params_from_hyperopt():
@@ -370,140 +371,77 @@ def extract_params_from_hyperopt():
         log(f"Error extrayendo params: {e}", "ERROR")
         return False
 
-def step_hyperopt():
-    """Hyperopt context-aware (Regime Based)."""
+def get_market_regime():
+    """Analiza los datos históricos reales para determinar la tendencia actual."""
+    log("Analizando datos del mercado local (Detección de Régimen Real)...", "AI")
     
-    timerange = ""
-    regimen_file = "user_data/regimen_actual.json"
-    
-    # DEBUG: Verificar existencia del archivo
-    log(f"Verificando archivo de régimen: {regimen_file}", "DEBUG")
-    
-    # 1. Consultar archivo de Régimen (Generado por Analista)
-    if os.path.exists(regimen_file):
-        log(f"Archivo {regimen_file} encontrado. Leyendo...", "DEBUG")
-        try:
-            with open(regimen_file, 'r', encoding='utf-8') as f:
-                regimen_data = json.load(f)
-            
-            log(f"Contenido régimen: {json.dumps(regimen_data, indent=2)}", "DEBUG")
-            
-            periodo = regimen_data.get('periodo_recomendado', {})
-            start_date = periodo.get('inicio', '')
-            end_date = periodo.get('fin', '')
-            
-            log(f"Fechas parseadas - Inicio: {start_date}, Fin: {end_date}", "DEBUG")
-            
-            if start_date and end_date:
-                # IMPORTANTE: Agregar buffer de inicio para Startup Candles (Indicadores)
-                try:
-                    start_dt = datetime.strptime(start_date, "%Y%m%d")
-                    end_dt = datetime.strptime(end_date, "%Y%m%d")
-                    
-                    # Buffer de seguridad: +10 días inicio, -5 días fin
-                    # Esto evita errores de "No data found" en los bordes
-                    start_date_optim = (start_dt + timedelta(days=10)).strftime("%Y%m%d")
-                    end_date_optim = (end_dt - timedelta(days=5)).strftime("%Y%m%d")
-                    
-                    timerange = f"--timerange {start_date_optim}-{end_date_optim}"
-                    log(f"Régimen Detectado: {regimen_data.get('regimen')} ({regimen_data.get('direccion')})", "AI")
-                    log(f"Datos espejo brutos: {start_date}-{end_date}", "AI")
-                    log(f"Timerange optimización (seguro): {start_date_optim}-{end_date_optim}", "AI")
-                    log(f"Comando timerange construido: {timerange}", "DEBUG")
-                except ValueError as ve:
-                    log(f"Error parseando fechas: {ve}. Usando fallback.", "ERROR")
-                    start_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%d")
-                    timerange = f"--timerange {start_date}-"
-            else:
-                log("Fechas de periodo espejo vacías en JSON. Usando fallback.", "WARNING")
-                start_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%d")
-                timerange = f"--timerange {start_date}-"
-                
-        except Exception as e:
-            log(f"Error leyendo {regimen_file}: {e}. Usando fallback.", "ERROR")
-            start_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%d")
-            timerange = f"--timerange {start_date}-"
-    else:
-        log(f"{regimen_file} no encontrado. Usando fallback a últimos 30 días.", "WARNING")
-        # Fallback a últimos 30 días
-        start_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%d")
-        timerange = f"--timerange {start_date}-"
+    try:
+        # Ejecutar el script detector de régimen
+        cmd = f".venv\\Scripts\\python analizar_regimen.py"
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        if result.returncode == 0:
+            regime = result.stdout.strip()
+            log(f"Régimen detectado: {regime}", "SUCCESS")
+            return regime
+    except Exception as e:
+        log(f"Error detectando régimen: {e}", "WARNING")
+        
+    return "BEARISH_TREND" # Fallback conservador dado el performance actual
 
-    spaces = "buy sell trailing"  # Removed roi and stoploss as they are not defined in strategy
-    
-    # Ajuste de Epochs para entorno OCI (Puede ser lento con 1000)
-    # Usuario tiene 1GB RAM + 4GB SWAP -> 100 epochs es seguro para probar
-    # ESTRATEGIA ADAPTATIVA DE ÉPOCAS
-    # Intentamos 1000 (Calidad Máxima) -> 500 (Media) -> 100 (Rápida)
-    epoch_ladder = [1000, 500, 100]
-    
-    for i, epochs in enumerate(epoch_ladder):
-        log(f"Hyperopt: Intentando con {epochs} épocas...", "AI")
-        
-        # WORKAROUND: Crear directorio hyperopt_results si no existe
-        os.makedirs("user_data/hyperopt_results", exist_ok=True)
-        
-        # Reconstruimos comando con las épocas actuales
-        cmd = (
-            f"{DOCKER_COMPOSE_CMD} hyperopt "
-            f"--config {CONFIG_FILE} "
-            f"--strategy {STRATEGY_NAME} "
-            f"--hyperopt-loss SharpeHyperOptLoss "
-            f"--spaces {spaces} "
-            f"--epochs {epochs} "
-            f"-j 1 "
-            f"--timeframe {TIMEFRAME} "
-            f"{timerange}"
-        )
+def get_historical_analogues(regime):
+    """
+    Catálogo Maestro de Escenarios (Pivote Táctico V8.0).
+    Densidad estadística: 30-60 días para capturar patrones reales.
+    """
+    catalog = {
+        "BEARISH_TREND": [
+            "20240715-20240815", # Flash Crash Agosto 2024
+            "20220501-20220601", # Crash de LUNA (Pánico Total)
+            "20230815-20230915"  # Verano bajista 2023
+        ],
+        "ALTA_VOLATILIDAD_NOTICIAS": [
+            "20240320-20240420", # Marzo-Abril 2024 (Incertidumbre IPC/FED)
+            "20210901-20211101"  # Repunte-Caída Histórico 2021
+        ],
+        "LATERAL_RANGO_ACUMULACION": [
+            "20240501-20240601", # Consolidación Q2 2024
+            "20230601-20230801"  # El gran aburrimiento de 2023
+        ],
+        "BULLISH_TREND": [
+            "20241001-20241130", # Pump Q4 2024 (Post-Elecciones)
+            "20231001-20231201"  # Inicio Bull Run ETF
+        ]
+    }
+    return catalog.get(regime, ["20240101-20240201"])
 
-        # Limpieza agresiva de lockfile
-        # Limpieza agresiva de lockfile
-        # FIX FREQTRADE 2025.12: El bug borra el archivo sin chequear si existe.
-        # Solución: CREAR el archivo vacío para que Freqtrade lo encuentre y lo borre feliz.
-        try:
-            with open("user_data/hyperopt.lock", "w") as f:
-                f.write("")
-            log("Lockfile creado preventivamente (Fix 2025.12).", "DEBUG")
-        except: pass
-            
-        if run_command(cmd, f"Hyperopt ({epochs} Epochs)"):
-            return extract_params_from_hyperopt()
-        
-        log(f"Fallo en Hyperopt con {epochs} épocas. Esperando 30s...", "WARNING")
-        time.sleep(30)
-        
-        # Intentar matar contenedor zombie
-        os.system(f"{DOCKER_COMPOSE_CMD} kill >nul 2>&1")
+def save_to_knowledge_base(regime, params):
+    """Guarda aprendizaje en Knowledge Base."""
+    kb = load_from_knowledge_base()
+    kb[regime] = {
+        "params": params,
+        "last_updated": datetime.now().isoformat(),
+        "confidence": 0.8 # Inicial
+    }
+    try:
+        with open(KNOWLEDGE_BASE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(kb, f, indent=4)
+        log(f"Memoria actualizada para el régimen {regime}.", "SUCCESS")
+    except Exception as e:
+        log(f"Error guardando memoria: {e}", "ERROR")
 
-    # FALLBACK INTELIGENTE: Hyperopt Mini (Low Memory / Low Duration)
-    log("ACTIVANDO PROTOCOLO DE EMERGENCIA: Hyperopt Mini.", "WARNING")
-    # Reducimos a 10 Epochs y 7 días de datos para minimizar carga
-    mini_timerange = (datetime.now() - timedelta(days=7)).strftime("%Y%m%d")
-    
-    # WORKAROUND: Crear directorio hyperopt_results
-    os.makedirs("user_data/hyperopt_results", exist_ok=True)
-    
-    cmd_mini = (
-        f"{DOCKER_COMPOSE_CMD} hyperopt "
-        f"--config {CONFIG_FILE} "
-        f"--strategy {STRATEGY_NAME} "
-        f"--hyperopt-loss SharpeHyperOptLoss "
-        f"--spaces {spaces} "
-        f"--epochs 10 "
-        f"-j 1 "
-        f"--timeframe {TIMEFRAME} "
-        f"--timerange {mini_timerange}-"
-    )
-    
-    if run_command(cmd_mini, "Hyperopt Mini (Emergencia)"):
-        log("Hyperopt Mini completado con éxito. Salvamos el ciclo.", "SUCCESS")
-        return extract_params_from_hyperopt()
-        
-    log("Hyperopt Mini también falló.", "ERROR")
-    return False
+def load_from_knowledge_base(regime=None):
+    """Carga memoria histórica."""
+    if not os.path.exists(KNOWLEDGE_BASE_FILE):
+        return {} if regime is None else None
+    try:
+        with open(KNOWLEDGE_BASE_FILE, 'r', encoding='utf-8') as f:
+            kb = json.load(f)
+            return kb if regime is None else kb.get(regime, {}).get('params')
+    except:
+        return {} if regime is None else None
 
 def deploy_params():
-    """Actualiza la configuración de producción con los nuevos parámetros."""
+    """Actualiza la configuración de producción y guarda en Git."""
     if not os.path.exists(PARAMS_FILE):
         return False
         
@@ -544,19 +482,18 @@ def deploy_params():
                         os.system("echo user_data/data > .gitignore") # No subir bases de datos pesadas
                         os.system("echo user_data/backtest_results >> .gitignore")
                     
-                    os.system(f"git add {DEPLOY_CONFIG_FILE} user_data/strategies/{STRATEGY_NAME}.py")
+                    os.system(f"git add user_data/strategies/{STRATEGY_NAME}.py")
                     msg_commit = f"Mejora Detectada - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
                     os.system(f'git commit -m "{msg_commit}" >nul 2>&1')
                     log("Memoria de Estrategia guardada en Git local.", "SUCCESS")
                     
                     # PUSH A REPOSITORIO REMOTO (si existe)
-                    # Verificar si hay remote configurado
                     check_remote = subprocess.run("git remote -v", shell=True, capture_output=True, text=True)
-                    if check_remote.stdout.strip():  # Si hay remotes configurados
+                    if check_remote.stdout.strip():
                         log("Sincronizando con repositorio remoto...", "INFO")
-                        push_result = os.system("git push origin main >nul 2>&1")  # Intenta main primero
+                        push_result = os.system("git push origin main >nul 2>&1")
                         if push_result != 0:
-                            push_result = os.system("git push origin master >nul 2>&1")  # Fallback a master
+                            push_result = os.system("git push origin master >nul 2>&1")
                         
                         if push_result == 0:
                             log("Cambios sincronizados con Git remoto.", "SUCCESS")
@@ -576,86 +513,115 @@ def deploy_params():
     return False
 
 def run_cycle():
-    """Ejecuta el protocolo completo Chacal."""
-    log("INICIANDO CICLO DE MEJORA CONTINUA", "START")
+    """
+    LEY DE HIERRO: Protocolo de Mejora Continua basado en Rentabilidad.
+    """
+    log("INICIANDO CICLO DE SUPERVIVENCIA REAL V10.0", "START")
     
-    # Limpieza preventiva para evitar "Another running instance"
-    log("Limpiando entorno Docker...", "DEBUG")
-    os.system(f"{DOCKER_COMPOSE_CMD} down -v >nul 2>&1") 
-    
-    # Check Comandos antes de empezar
-    check_telegram_commands()
-    if os.path.exists("STOP_SIGNAL"):
-        log("Señal de PARADA detectada. Abortando.", "WARNING")
-        return
-    
-    # 1. Download (Deep Memory)
-    if not step_download_data(): return 
-    
-    # 2. Análisis de Régimen (Genera user_data/regimen_actual.json)
-    step_analyze_regime()
-    
-    # 3. Backtest Basal
+    # 1. EVALUACIÓN DE DAÑOS (Basal)
+    # Medimos el rendimiento actual del bot con sus parámetros vigentes.
+    log("AUDITORÍA DE PERFORMANCE: Midiendo rendimiento actual...", "INFO")
     baseline = step_backtest("basal")
     
-    if baseline:
-        log(f"BASELINE: Profit {baseline['profit_total']:.2%} | WinRate {baseline['win_rate']:.2%} | Trades: {baseline['total_trades']}", "STATS")
-        if baseline['total_trades'] == 0:
-            log("ATENCIÓN: 0 trades detectados en el basal.", "WARNING")
+    # Lógica de S.O.S: Si el bot está perdiendo > 5% o no tiene trades, algo está mal.
+    current_profit = baseline['profit_total'] if baseline else -1.0
+    is_failing = current_profit < 0 or (baseline and baseline['total_trades'] == 0)
     
-    # 3. Hyperopt
-    check_telegram_commands()
-    if os.path.exists("STOP_SIGNAL"): return
+    if is_failing:
+        log(f"FALLO DETECTADO: Profit {current_profit:.2%}. Iniciando rectificación forzada.", "ERROR")
+        send_telegram_msg(f"🚨 **LEY DE HIERRO ACTIVADA**: El bot está perdiendo ({current_profit:.2%}). Iniciando re-estructuración de dirección.")
+    else:
+        log(f"DESEMPEÑO ACEPTABLE: Profit {current_profit:.2%}. Buscando mejora estadística.", "SUCCESS")
     
-    hyperopt_success = step_hyperopt()
+    # 2. ANÁLISIS TÉCNICO REAL (No simulado)
+    regime = get_market_regime()
+    analogues = get_historical_analogues(regime)
     
-    if not hyperopt_success:
-        log("Fallo en Hyperopt. ACTIVANDO PROTOCOLO DE CONTINGENCIA.", "WARNING")
-        log("Saltando a Validación con parámetros anteriores...", "AI")
+    best_candidate = None
+    max_improvement = -999
     
-    # 4. Validación (Se ejecuta siempre, incluso si falló hyperopt, para mantener trading vivo)
-    # Si hyperopt falló, validation usará el config basal o lo que haya en params.json
-    validation = step_backtest("validation")
-    if validation:
-        log(f"VALIDATION: Profit {validation['profit_total']:.2%} | WinRate {validation['win_rate']:.2%} | Trades: {validation['total_trades']}", "STATS")
+    for analogue_timerange in analogues:
+        log(f"--- ANALIZANDO ESCENARIO HISTÓRICO: {analogue_timerange} ---", "AI")
         
-        # 5. Comparación y Decisión
-        if not baseline or validation['profit_total'] > baseline['profit_total']:
-            log("¡MEJORA DETECTADA! Nuevos parámetros aprobados.", "SUCCESS")
-            # Desplegar cambios
-            if deploy_params():
-                # REACTIVAR DRY RUN AUTOMÁTICAMENTE
-                log("Reactivando DRY RUN con nuevos parámetros...", "AI")
-                try:
-                    # Verificar si hay un proceso dry-run anterior corriendo
-                    check_cmd = "docker ps --filter name=freqtrade --filter status=running --quiet"
-                    check_result = subprocess.run(check_cmd, shell=True, capture_output=True, text=True)
-                    
-                    if check_result.stdout.strip():
-                        log("Proceso DRY RUN anterior detectado. Reiniciando...", "INFO")
-                        os.system(f"{DOCKER_COMPOSE_CMD} down >nul 2>&1")
-                        time.sleep(5)
-                    
-                    # Iniciar DRY RUN en background con configuración actualizada
-                    dry_cmd = f"docker compose up -d"
-                    result = os.system(dry_cmd)
-                    
-                    if result == 0:
-                        log("DRY RUN ACTIVO con parámetros optimizados.", "SUCCESS")
-                        send_telegram_msg("✅ BOT REACTIVADO en DRY RUN con parámetros mejorados.")
-                    else:
-                        log("Error al iniciar DRY RUN. Revisar Docker.", "ERROR")
-                        
-                except Exception as e:
-                    log(f"Error reactivando DRY RUN: {e}", "ERROR")
-                    
-                log("Ciclo finalizado con ÉXITO. Sistema esperando siguiente vuelta.", "INFO")
-            else:
-                log("Fallo en despliegue de parámetros.", "ERROR")
-        else:
-            log("Resultado inferior al basal o insuficiente mejora. Se mantienen parámetros.", "WARNING")
+        # A. Sincronización de Datos
+        if not step_download_data(timerange=analogue_timerange): continue 
+        
+        # B. OPTIMIZACIÓN AUTÓNOMA (Hyperopt)
+        # El bot decide si invierte su lógica o cambia parámetros para ser rentable.
+        log(f"FORZANDO MEJORA CONTINUA en {analogue_timerange}...", "INFO")
+        params = step_hyperopt_v8(regime=regime, timerange=analogue_timerange)
+        
+        if not params: continue
+            
+        # C. VALIDACIÓN CRUZADA (Presente vs Pasado)
+        log("VALIDANDO NUEVO CONOCIMIENTO...", "INFO")
+        validation = step_backtest("validation")
+        
+        if validation:
+            profit = validation['profit_total']
+            trades = validation['total_trades']
+            log(f"RESULTADO: Profit {profit:.2%} | Trades: {trades}", "STATS")
+            
+            # Solo consideramos candidatos con trades y con mejoría real
+            if trades > 0 and (profit > current_profit):
+                improvement = profit - current_profit
+                if improvement > max_improvement:
+                    max_improvement = improvement
+                    best_candidate = analogue_timerange
+                    log(f"NUEVO MEJOR CANDIDATO: {best_candidate} (Mejora: {improvement:.2%})", "SUCCESS")
+
+    # 3. DESPLIEGUE POR RENTABILIDAD
+    if best_candidate:
+        log(f"¡MEJORA CONTINUA COMPLETADA! Desplegando solución de escenario {best_candidate}.", "SUCCESS")
+        if deploy_params():
+            reactivate_dry_run()
+            send_telegram_msg(f"✅ **BOLA DE NIEVE**: Mejora del {max_improvement:.2%} aplicada. Bot re-configurado.")
+            return
+    else:
+        log("No se encontró una mejora superior a la actual. Manteniendo configuración defensiva.", "WARNING")
+        send_telegram_msg("⚠️ **MEJORA AGOTADA**: Ningún escenario histórico resolvió el problema mejor que la configuración actual. Manteniendo modo protección.")
+
+def step_hyperopt_v8(regime, timerange):
+    """Versión optimizada de hyperopt para el protocolo de pivote."""
+    spaces = "buy sell trailing"
+    # Ajustado a 100 epochs para estabilidad en OCI
+    cmd = (
+        f"{DOCKER_COMPOSE_CMD} hyperopt "
+        f"--config {CONFIG_FILE} "
+        f"--strategy {STRATEGY_NAME} "
+        f"--hyperopt-loss SharpeHyperOptLoss "
+        f"--spaces {spaces} "
+        f"--epochs 100 "
+        f"-j 1 "
+        f"--timeframe {TIMEFRAME} "
+        f"--timerange {timerange}"
+    )
+    
+    # Fix lockfile
+    try:
+        with open("user_data/hyperopt.lock", "w") as f: f.write("")
+    except: pass
+    
+    success, _ = run_command(cmd, f"Hyperopt Scenario {timerange}")
+    if success:
+        params = extract_params_from_hyperopt()
+        if params:
+            save_to_knowledge_base(regime, params)
+            return params
+    return None
+
+def reactivate_dry_run():
+    """Helper para reiniciar el bot."""
+    try:
+        os.system(f"{DOCKER_COMPOSE_CMD} down >nul 2>&1")
+        time.sleep(5)
+        os.system("docker compose up -d")
+        send_telegram_msg("✅ BOT REACTIVADO con enfoque rectificado.")
+    except Exception as e:
+        log(f"Error reactivando: {e}", "ERROR")
 
 def main():
+    log("ORDEN RECIBIDA: Iniciando orquestador unbuffered...", "START")
     parser = argparse.ArgumentParser()
     parser.add_argument('--action', type=str, default='cycle', choices=['cycle', 'download', 'backtest', 'hyperopt'])
     args = parser.parse_args()
