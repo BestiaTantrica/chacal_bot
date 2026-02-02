@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 from datetime import datetime, timezone
+from typing import Optional, Union
 import talib.abstract as ta
 import freqtrade.vendor.qtpylib.indicators as qtpylib
 from freqtrade.strategy import (BooleanParameter, CategoricalParameter, DecimalParameter,
@@ -15,33 +16,48 @@ class ChacalPulseV1(IStrategy):
     """
     ESTRATEGIA CHACAL PULSE V1 - MOLECULAR (FUTURES READY)
     
-    Enfoque: Momentum de alta resolución (1m) durante aperturas de mercados globales.
-    MODO: LONG & SHORT (Porque en Futures se caza en ambas direcciones).
+    Enfoque: Momentum de alta resolución durante aperturas de mercados globales.
+    MODO: LONG & SHORT (Futures 5x)
+    TIMEFRAME: 5m
     """
     
     INTERFACE_VERSION = 3
     can_short: bool = True
 
-    # ROI Corto para scalping de alta frecuencia
+    # ROI (Optimizado Hyperopt 5m: 2026-02-02)
     minimal_roi = {
-        "0": 0.008,
-        "5": 0.004,
-        "15": 0.002,
-        "30": 0.001
+        "0": 0.065,    # 6.5% inmediato
+        "7": 0.027,    # 2.7% tras 35 min
+        "15": 0.007,   # 0.7% tras 75 min
+        "39": 0        # Salida al break-even tras 3hs
     }
 
-    stoploss = -0.015 # Ajustado a -1.5% para proteger la cuenta
+    # Stoploss (Optimizado: Mas holgado para aguantar volatilidad 5m)
+    stoploss = -0.167
     
+    # Trailing Stop (Optimizado)
     trailing_stop = True
-    trailing_stop_positive = 0.002
-    trailing_stop_positive_offset = 0.005
-    trailing_only_offset_is_reached = True
+    trailing_stop_positive = 0.202
+    trailing_stop_positive_offset = 0.295
+    trailing_only_offset_is_reached = False
 
-    timeframe = '1m'
+    # Timeframe CLAVADO en 5m
+    timeframe = '5m'
     
-    # Parámetros Hyperoptables
-    v_factor = DecimalParameter(1.5, 4.0, default=2.8, space="buy", optimize=True)
-    pulse_change = DecimalParameter(0.0005, 0.003, default=0.001, space="buy", optimize=True)
+    # Parámetros Hyperoptables (Fixed from Hyperopt Result)
+    # Vol factor bajó de 2.7 a 2.5 (mas sensible)
+    v_factor = DecimalParameter(1.5, 4.0, default=2.511, space="buy", optimize=True)
+    # Pulse change subió a 0.3% (requiere movimiento real)
+    pulse_change = DecimalParameter(0.0005, 0.003, default=0.003, space="buy", optimize=True)
+
+    # --- LEVERAGE (FUTURES REALES) ---
+    def leverage(self, pair: str, current_time: datetime, current_rate: float,
+                 proposed_leverage: float, max_leverage: float, entry_tag: Optional[str], side: str,
+                 **kwargs) -> float:
+        """
+        Apalancamiento Fijo 5x.
+        """
+        return 5.0
 
     def populate_indicators(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         dataframe['rsi'] = ta.RSI(dataframe, timeperiod=7)
