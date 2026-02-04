@@ -45,18 +45,16 @@ class ChacalPulseV1(IStrategy):
     timeframe = '5m'
     
     # Parámetros Hyperoptables (Fixed from Hyperopt Result)
-    # Vol factor bajó de 2.7 a 2.5 (mas sensible)
-    v_factor = DecimalParameter(1.5, 4.0, default=2.511, space="buy", optimize=True)
-    # Pulse change subió a 0.3% (requiere movimiento real)
-    pulse_change = DecimalParameter(0.0005, 0.003, default=0.003, space="buy", optimize=True)
+    v_factor = DecimalParameter(1.5, 6.0, default=2.5, space="buy", optimize=True)
+    pulse_change = DecimalParameter(0.0005, 0.005, default=0.003, space="buy", optimize=True)
+    
+    # Nuevo: Selector de Modo (Hunter: Ventanas UTC / Vigilante: 24/7 picos extremos)
+    operation_mode = CategoricalParameter(['hunter', 'vigilante'], default='hunter', space="buy", optimize=True)
 
     # --- LEVERAGE (FUTURES REALES) ---
     def leverage(self, pair: str, current_time: datetime, current_rate: float,
                  proposed_leverage: float, max_leverage: float, entry_tag: Optional[str], side: str,
                  **kwargs) -> float:
-        """
-        Apalancamiento Fijo 5x.
-        """
         return 5.0
 
     def populate_indicators(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
@@ -68,15 +66,23 @@ class ChacalPulseV1(IStrategy):
         dataframe['hour'] = dataframe['date_utc'].dt.hour
         dataframe['minute'] = dataframe['date_utc'].dt.minute
         
-        dataframe['market_pulse_window'] = 0
-        # London + NY Open
+        # Identificar si estamos en ventana de apertura (Solo para modo Hunter)
+        dataframe['is_pulse_window'] = 0
         dataframe.loc[
             ((dataframe['hour'] >= 8) & (dataframe['hour'] < 10)) | 
             ((dataframe['hour'] == 13) & (dataframe['minute'] >= 30)) | 
             ((dataframe['hour'] == 14)) | 
             ((dataframe['hour'] == 15) & (dataframe['minute'] <= 30)), 
-            'market_pulse_window'
+            'is_pulse_window'
         ] = 1
+
+        # Lógica de Gatillo según el modo
+        # Hunter: Solo en ventana. Vigilante: Siempre activo.
+        dataframe['gate_open'] = 0
+        if self.operation_mode.value == 'hunter':
+            dataframe.loc[dataframe['is_pulse_window'] == 1, 'gate_open'] = 1
+        else:
+            dataframe.loc[:, 'gate_open'] = 1
 
         dataframe['price_change'] = (dataframe['close'] - dataframe['open']) / dataframe['open']
         
@@ -87,7 +93,7 @@ class ChacalPulseV1(IStrategy):
         
         # LONG: Ventana + Vol Spike + Precio Up
         pulse_long = (
-            (dataframe['market_pulse_window'] == 1) &
+            (dataframe['gate_open'] == 1) &
             (dataframe['volume'] > (dataframe['volume_mean'] * self.v_factor.value)) &
             (dataframe['price_change'] > self.pulse_change.value) &
             (dataframe['rsi'] < 80)
@@ -103,7 +109,7 @@ class ChacalPulseV1(IStrategy):
         
         # SHORT: Ventana + Vol Spike + Precio Down
         pulse_short = (
-            (dataframe['market_pulse_window'] == 1) &
+            (dataframe['gate_open'] == 1) &
             (dataframe['volume'] > (dataframe['volume_mean'] * self.v_factor.value)) &
             (dataframe['price_change'] < -self.pulse_change.value) &
             (dataframe['rsi'] > 20)

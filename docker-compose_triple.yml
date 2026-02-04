@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  chacal_alpha:
+    image: freqtradeorg/freqtrade:stable
+    restart: always
+    container_name: chacal_alpha
+    volumes:
+      - "./user_data:/freqtrade/user_data"
+    command: >
+      trade --logfile /freqtrade/user_data/logs/freqtrade_alpha.log --db-url sqlite:////freqtrade/user_data/tradesv3_alpha.sqlite --config /freqtrade/user_data/config_alpha.json --strategy ChacalPulseV1
+
+  chacal_beta:
+    image: freqtradeorg/freqtrade:stable
+    restart: always
+    container_name: chacal_beta
+    volumes:
+      - "./user_data:/freqtrade/user_data"
+    command: >
+      trade --logfile /freqtrade/user_data/logs/freqtrade_beta.log --db-url sqlite:////freqtrade/user_data/tradesv3_beta.sqlite --config /freqtrade/user_data/config_beta.json --strategy ChacalPulseV1
+
+  chacal_gamma:
+    image: freqtradeorg/freqtrade:stable
+    restart: always
+    container_name: chacal_gamma
+    volumes:
+      - "./user_data:/freqtrade/user_data"
+    command: >
+      trade --logfile /freqtrade/user_data/logs/freqtrade_gamma.log --db-url sqlite:////freqtrade/user_data/tradesv3_gamma.sqlite --config /freqtrade/user_data/config_gamma.json --strategy ChacalPulseV1
+
+  chacal_conserje:
+    image: chacal_conserje:latest
+    restart: always
+    container_name: chacal_conserje
+    volumes:
+      - "./user_data:/app/user_data"

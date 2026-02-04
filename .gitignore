@@ -1,5 +1,5 @@
 # Freqtrade Configuration (Secrets)
-config_chacal_aws.json
+config_*.json
 user_data/config_backtest.json
 user_data/config.json
 .env
