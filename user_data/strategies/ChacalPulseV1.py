@@ -67,6 +67,8 @@ class ChacalPulseV1(IStrategy):
         dataframe['minute'] = dataframe['date_utc'].dt.minute
         
         # Identificar si estamos en ventana de apertura (Solo para modo Hunter)
+        # Ventana 1: 08:00 - 10:00 UTC (Apertura Europa)
+        # Ventana 2: 13:30 - 15:30 UTC (Apertura NY + Cierre Europa)
         dataframe['is_pulse_window'] = 0
         dataframe.loc[
             ((dataframe['hour'] >= 8) & (dataframe['hour'] < 10)) | 
