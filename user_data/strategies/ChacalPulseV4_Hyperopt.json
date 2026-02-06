@@ -1,0 +1,38 @@
+{
+  "strategy_name": "ChacalPulseV4_Hyperopt",
+  "params": {
+    "trailing": {
+      "trailing_stop": false,
+      "trailing_stop_positive": null,
+      "trailing_stop_positive_offset": 0.0,
+      "trailing_only_offset_is_reached": false
+    },
+    "max_open_trades": {
+      "max_open_trades": 3
+    },
+    "buy": {
+      "operation_mode": "hunter",
+      "pulse_change": 0.005,
+      "v_factor": 4.597
+    },
+    "sell": {
+      "bear_roi_0": 0.037,
+      "bear_stoploss": -0.044,
+      "bull_roi_0": 0.096,
+      "bull_stoploss": -0.068,
+      "sideways_roi_0": 0.01,
+      "sideways_stoploss": -0.038
+    },
+    "roi": {
+      "0": 0.092,
+      "20": 0.054,
+      "71": 0.013,
+      "135": 0
+    },
+    "stoploss": {
+      "stoploss": -0.231
+    }
+  },
+  "ft_stratparam_v": 1,
+  "export_time": "2026-02-06 01:22:10.314392+00:00"
+}
