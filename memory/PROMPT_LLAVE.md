@@ -35,10 +35,12 @@
 - Scripts de ejecución secuencial reparados y optimizados.
 - Repositorio Git sincronizado y limpio.
 
-
 ---
+
 ## ULTIMOS HILOS DE CONOCIMIENTO
+
 ### 2026-02-08_Resultados_Gamma.md
+
 La Torre Gamma (DOGE, AVAX, LINK) ha arrojado los mejores resultados de la Fase 2 hasta el momento, validando la estrategia ChacalPulseV4 en mercados de alta volatilidad.
 
 Resultados destacados:
@@ -50,6 +52,7 @@ Resultados destacados:
 La "Poda de Horas Mágicas" demuestra ser la clave para una optimización rápida y efectiva sin saturar los recursos de la instancia AWS.
 
 ### 2026-02-08_Reparacion_Fase2.md
+
 Identificamos una falla crítica en la ejecución de la Fase 2 (100% de error en las 4 torres). La causa fue la corrupción de los archivos `config_*.json` (caracteres de escape inválidos) y errores de sintaxis en el script maestro `lanzar_fase2` (faltaba el sufijo `:USDT` para pares de futuros y el entrypoint de docker para el script de poda).
 
 Se procedió a:
@@ -62,6 +65,7 @@ Se procedió a:
 Estado: Recuperación exitosa y ejecución iniciada.
 
 ### 2026-02-08_Metodologia_Chacal_V4.md
+
 Documentación de la metodología de optimización compuesta para el mercado de Binance Futures (USDT). Este proceso está diseñado para maximizar rentabilidad en servidores de bajos recursos (1GB RAM) sin sacrificar robustez estadística.
 
 ### 1. PRINCIPIOS FUNDAMENTALES (ORDEN ESTRUCTURAL)
@@ -87,6 +91,5 @@ Documentación de la metodología de optimización compuesta para el mercado de 
 
 `Descarga Directa (Futures) -> Poda (Magic Hours) -> Hyperopt Secuencial (Torres) -> Unificación JSON`.
 
-
---- 
+---
 **INSTRUCCION:** Continua desde este punto. No repitas lo ya listado arriba.
