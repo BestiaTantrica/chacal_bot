@@ -88,10 +88,13 @@ class PegasoMemory:
         for t in threads:
             with open(os.path.join(THREADS_DIR, t), "r", encoding="utf-8") as f:
                 content = f.read()
-                # Extraemos solo el resumen del hilo (ajustado para mayor robustez)
-                match = re.search(r"## RESUMEN DE LA CHARLA\r?\n(.*?)(?:\r?\n---|\r?\n\.\.\.|$)", content, re.DOTALL)
-                if match:
-                    prompt += f"### {t}\n{match.group(1).strip()}\n\n"
+                # Captura el contenido despues del header hasta el final del archivo o separadores
+                resumen_match = re.search(r"## RESUMEN DE LA CHARLA\r?\n+(.*)", content, re.DOTALL)
+                if resumen_match:
+                    texto = resumen_match.group(1).strip()
+                    # Cortamos si hay separadores, sino va hasta el final
+                    texto = re.split(r"\r?\n---|\r?\n\.\.\.", texto)[0].strip()
+                    prompt += f"### {t}\n{texto}\n\n"
 
         prompt += "\n--- \n**INSTRUCCION:** Continua desde este punto. No repitas lo ya listado arriba."
 
