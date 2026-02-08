@@ -16,11 +16,13 @@ Estamos en el cierre de la Fase 2 del Protocolo Chacal V4. El objetivo es consol
 - **GAMMA (DOGE, AVAX, LINK)**: ✅ **MÁXIMA RENTABILIDAD**. LINK (+196%), DOGE (+105%).
 - **DELTA (DOT, SUI, NEAR)**: ⏳ **NEAR** procesando el último bloque de épocas. SUI validada (+106%).
 
-## 🎯 METODOLOGÍA DEL "CHACAL"
+## 🎯 METODOLOGÍA DEL "CHACAL" (SISTEMA DUAL)
 
-1. **PODA MAGICA**: Se eliminó el 80% del ruido de mercado filtrando solo las horas de alta volatilidad (Londres/NY). Esto permite que el bot no se "agote" en laterales sin volumen.
-2. **MODO FANTASMA (DOCKER)**: Ejecución secuencial con 1 worker. Priorizamos la **Persistencia** (no colapsar la RAM de 1GB) sobre la velocidad.
-3. **LOGICA DUAL**: Optimización tanto para **Long** como para **Short**. El Chacal ahora gana cuando el mercado se desangra.
+1. **FASE 1: EXPLORACIÓN (1m)**: Primer acercamiento quirúrgico. Se usan velas de 1 minuto sobre 60-120 días para capturar el "Hunter Mode" (reacción rápida). Vital para entender la micro-volatilidad inicial de cada moneda.
+2. **FASE 2: REFINAMIENTO (5m)**: Paso a escala industrial (en curso). Velas de 5 minutos sobre **1 año completo**. Objetivo: estabilidad a largo plazo y rentabilidad sostenida.
+3. **PODA MÁGICA**: Se aplica en ambas fases. Se elimina el 80% del ruido filtrando solo las horas de alta volatilidad (**Londres/NY**).
+4. **MODO FANTASMA**: Ejecución secuencial con 1 worker (`job-workers 1`) para proteger la RAM de 1GB.
+5. **LÓGICA DUAL**: Optimización obligatoria para **Long** y **Short**.
 
 ## 🛠️ INFRAESTRUCTURA AWS
 
@@ -32,9 +34,9 @@ Estamos en el cierre de la Fase 2 del Protocolo Chacal V4. El objetivo es consol
 
 ## 📜 HILOS DE CONOCIMIENTO RECIENTES
 
-### Metodología Quirúrgica (Poda)
+### Metodología de Fase 1 y 2
 
-Documentación de por qué 5m es superior para robustez industrial. La poda reduce el tiempo de hyperopt en un 60% manteniendo la calidad del Sharpe Ratio.
+Explicación de por qué pasamos de 1m a 5m. La fase 1 captura la esencia, la fase 2 la robustez industrial. La poda es el filtro de pureza.
 
 ### Reparación de Fase 2
 
