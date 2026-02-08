@@ -1,0 +1,19 @@
+#!/bin/bash
+# Torre Delta: DOT, SUI, NEAR
+PAIRS=("DOT/USDT:USDT" "SUI/USDT:USDT" "NEAR/USDT:USDT")
+for PAIR in "${PAIRS[@]}"; do
+    echo "Running Delta on $PAIR"
+    docker run --rm \
+      -v /home/ec2-user/chacal_bot/user_data:/freqtrade/user_data \
+      freqtradeorg/freqtrade:develop \
+      hyperopt \
+      --config user_data/config_delta.json \
+      --hyperopt-loss SharpeHyperOptLoss \
+      --strategy ChacalPulseV4_Hyperopt \
+      --spaces buy sell roi stoploss \
+      --timeframe 5m \
+      --timerange 20250101- \
+      --epochs 1000 \
+      --pairs "$PAIR" \
+      --job-workers 1
+done
