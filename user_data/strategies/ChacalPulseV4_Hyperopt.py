@@ -28,28 +28,28 @@ class ChacalPulseV4_Hyperopt(IStrategy):
     
     # 1. Régimen BULL (Tendencia Alcista)
     # Target: Dejar correr ganancias
-    bull_roi_0 = DecimalParameter(0.02, 0.15, default=0.08, space="sell", optimize=True)
-    bull_stoploss = DecimalParameter(-0.15, -0.05, default=-0.10, space="sell", optimize=True)
+    bull_roi_0 = DecimalParameter(0.02, 0.15, default=0.023, space="sell", optimize=True)
+    bull_stoploss = DecimalParameter(-0.15, -0.05, default=-0.076, space="sell", optimize=True)
     
     # 2. Régimen BEAR (Tendencia Bajista - Defensa)
     # Target: Salir rápido si falla el rebote
-    bear_roi_0 = DecimalParameter(0.01, 0.05, default=0.03, space="sell", optimize=True)
-    bear_stoploss = DecimalParameter(-0.06, -0.02, default=-0.04, space="sell", optimize=True)
+    bear_roi_0 = DecimalParameter(0.01, 0.05, default=0.048, space="sell", optimize=True)
+    bear_stoploss = DecimalParameter(-0.06, -0.02, default=-0.036, space="sell", optimize=True)
     
     # 3. Régimen SIDEWAYS (Lateral - Scalping)
     # Target: Scalping agresivo
-    sideways_roi_0 = DecimalParameter(0.005, 0.025, default=0.015, space="sell", optimize=True)
-    sideways_stoploss = DecimalParameter(-0.04, -0.01, default=-0.025, space="sell", optimize=True)
+    sideways_roi_0 = DecimalParameter(0.005, 0.025, default=0.025, space="sell", optimize=True)
+    sideways_stoploss = DecimalParameter(-0.04, -0.01, default=-0.017, space="sell", optimize=True)
 
     # Stoploss de Seguridad (El real es dinámico por custom_stoploss)
-    stoploss = -0.30
+    stoploss = -0.231
 
     # Timeframe
     timeframe = '5m'
     
     # Parámetros Hyperoptables (Entrada)
-    v_factor = DecimalParameter(1.5, 6.0, default=2.5, space="buy", optimize=True)
-    pulse_change = DecimalParameter(0.0005, 0.005, default=0.003, space="buy", optimize=True)
+    v_factor = DecimalParameter(1.5, 6.0, default=4.319, space="buy", optimize=True)
+    pulse_change = DecimalParameter(0.0005, 0.005, default=0.004, space="buy", optimize=True)
     operation_mode = CategoricalParameter(['hunter', 'vigilante'], default='hunter', space="buy", optimize=True)
 
     # --- LEVERAGE (FUTURES REALES) ---

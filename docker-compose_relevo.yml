@@ -5,37 +5,25 @@ services:
     image: freqtradeorg/freqtrade:stable
     container_name: chacal_alpha
     volumes: [ "./user_data:/freqtrade/user_data" ]
-    command: trade --logfile /freqtrade/user_data/logs/alpha.log --db-url sqlite:////freqtrade/user_data/tradesv3_alpha.sqlite --config /freqtrade/user_data/config_alpha.json --strategy ChacalPulseV1
+    command: trade --logfile /freqtrade/user_data/logs/alpha.log --db-url sqlite:////freqtrade/user_data/tradesv3_alpha.sqlite --config /freqtrade/user_data/config_alpha.json --strategy ChacalPulseV4_Hyperopt
 
   chacal_beta:
     image: freqtradeorg/freqtrade:stable
     container_name: chacal_beta
     volumes: [ "./user_data:/freqtrade/user_data" ]
-    command: trade --logfile /freqtrade/user_data/logs/beta.log --db-url sqlite:////freqtrade/user_data/tradesv3_beta.sqlite --config /freqtrade/user_data/config_beta.json --strategy ChacalPulseV1
+    command: trade --logfile /freqtrade/user_data/logs/beta.log --db-url sqlite:////freqtrade/user_data/tradesv3_beta.sqlite --config /freqtrade/user_data/config_beta.json --strategy ChacalPulseV4_Hyperopt
 
   chacal_gamma:
     image: freqtradeorg/freqtrade:stable
     container_name: chacal_gamma
     volumes: [ "./user_data:/freqtrade/user_data" ]
-    command: trade --logfile /freqtrade/user_data/logs/gamma.log --db-url sqlite:////freqtrade/user_data/tradesv3_gamma.sqlite --config /freqtrade/user_data/config_gamma.json --strategy ChacalPulseV1
+    command: trade --logfile /freqtrade/user_data/logs/gamma.log --db-url sqlite:////freqtrade/user_data/tradesv3_gamma.sqlite --config /freqtrade/user_data/config_gamma.json --strategy ChacalPulseV4_Hyperopt
 
   chacal_delta:
     image: freqtradeorg/freqtrade:stable
     container_name: chacal_delta
     volumes: [ "./user_data:/freqtrade/user_data" ]
-    command: trade --logfile /freqtrade/user_data/logs/delta.log --db-url sqlite:////freqtrade/user_data/tradesv3_delta.sqlite --config /freqtrade/user_data/config_delta.json --strategy ChacalPulseV1
-
-  chacal_epsilon:
-    image: freqtradeorg/freqtrade:stable
-    container_name: chacal_epsilon
-    volumes: [ "./user_data:/freqtrade/user_data" ]
-    command: trade --logfile /freqtrade/user_data/logs/epsilon.log --db-url sqlite:////freqtrade/user_data/tradesv3_epsilon.sqlite --config /freqtrade/user_data/config_epsilon.json --strategy ChacalPulseV1
-
-  chacal_zeta:
-    image: freqtradeorg/freqtrade:stable
-    container_name: chacal_zeta
-    volumes: [ "./user_data:/freqtrade/user_data" ]
-    command: trade --logfile /freqtrade/user_data/logs/zeta.log --db-url sqlite:////freqtrade/user_data/tradesv3_zeta.sqlite --config /freqtrade/user_data/config_zeta.json --strategy ChacalPulseV1
+    command: trade --logfile /freqtrade/user_data/logs/delta.log --db-url sqlite:////freqtrade/user_data/tradesv3_delta.sqlite --config /freqtrade/user_data/config_delta.json --strategy ChacalPulseV4_Hyperopt
 
   chacal_conserje:
     image: chacal_conserje:latest
