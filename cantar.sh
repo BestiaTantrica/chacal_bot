@@ -1,17 +1,20 @@
 #!/bin/bash
-# Script de lectura de memoria con Auto-Pull
-REPO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# Script Quirúrgico de Memoria - MUNDO TRADE
+# Obligamos a que lea el archivo de ESTA carpeta, no de la central.
 
-echo "Buscando actualizaciones en la nube..."
-git -C "$REPO_DIR" pull
-
+REPO_DIR="$( pwd )"
 PROMPT_FILE="$REPO_DIR/memory/PROMPT_LLAVE.md"
 
+echo "📍 REPO ACTUAL: $REPO_DIR"
+echo "Buscando actualizaciones en la nube..."
+git pull origin main --quiet
+
 if [ -f "$PROMPT_FILE" ]; then
+    echo -e "\n--- CONTENIDO DE MEMORIA TRADE ---"
     cat "$PROMPT_FILE"
     echo -e "\n--------------------------------------------------"
-    echo -e "      🦅 MEMORIA PEGASO SINCRONIZADA (TERMUX)"
+    echo -e "      🦅 MEMORIA PEGASO SINCRONIZADA (TRADE)"
     echo -e "--------------------------------------------------"
 else
-    echo "❌ Error: No se encuentra el archivo de memoria."
+    echo "❌ Error: No se encuentra $PROMPT_FILE"
 fi
