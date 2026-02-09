@@ -21,7 +21,7 @@
 
 ### 2. AUTOMATIZACIÓN ENERGÉTICA
 
-- **Apagado**: ✅ Script `apagar_si_no_hay_trades.py` activo en Cron (07:15 ART).
+- **Apagado**: ✅ Script `apagar_si_no_hay_trades.py` activo en Cron (07:15 ART y 14:45 ART).
   - Status: **EXITOSO** (Instancia apagada a las 07:15 ART).
 - **Encendido**: ✅ EventBridge AWS configurado por usuario (10:25 ART).
 - **Arranque Bots**: ✅ **RESUELTO (10:35 ART)**.
