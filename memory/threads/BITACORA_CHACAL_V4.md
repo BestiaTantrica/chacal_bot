@@ -6,8 +6,26 @@
 
 - **Flota**: 4 Torres Activas (12/12 monedas).
 - **Energía**: ✅ Vigilante + AWS Scheduler operativos.
-- **Monitoreo**: Conserje v4 activo en Telegram.
-- **Profits Destacados**: LINK (+196%), NEAR (+140%), SUI (+106%).
+- **Monitoreo**: Conserje v4 activo en Telegram (Texto Plano).
+- **Profits Destacados**: Historial limpio desde $300 (09/02/2026).
+
+---
+
+## 📅 2026-02-09 | LIMPIEZA TOTAL Y AUTOMATIZACIÓN (LEY CERO)
+
+### 1. REINICIO DE SISTEMA
+
+- **Capital**: Ajustado a **$300 USDT** ($75/bot).
+- **Datos**: Inyección Quirúrgica de Hyperopt Fase 2 (LINK, AVAX, DOGE reales).
+- **Base de Datos**: Limpieza total de trades viejos/basura.
+
+### 2. AUTOMATIZACIÓN ENERGÉTICA
+
+- **Apagado**: ✅ Script `apagar_si_no_hay_trades.py` activo en Cron (07:15 ART).
+  - Status: **EXITOSO** (Instancia apagada a las 07:15 ART).
+- **Encendido**: ✅ EventBridge AWS configurado por usuario (10:25 ART).
+- **Arranque Bots**: ⚠️ **PENDIENTE**. No se configuró `@reboot` en Crontab.
+  - **ACCIÓN REQUERIDA (10:30 ART)**: Entrar por SSH y ejecutar `bash lanzar_torres.sh`.
 
 ---
 
