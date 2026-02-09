@@ -2,13 +2,12 @@
 
 *Registro cronológico de la estrategia, incidencias y despliegue.*
 
-## 📕 REFERENCIA DE CONTINUIDAD
+## 📊 ESTADO ACTUAL: ONLINE (DRY RUN) 🔥
 
-Si sos una nueva IA o humano tomando el mando, leé **PRIMERO** este archivo: **`memory/MANUAL_MAESTRO_CHACAL_V4.md`**. Ahí está explicada toda la arquitectura técnica para seguir laburando con orden.
-
-## RESUMEN DE LA CHARLA
-
-Bitácora maestra del proyecto Chacal V4. Contiene la metodología, el registro de incidencias resueltas, los resultados de rentabilidad de la Fase 2 y el protocolo de gestión energética de AWS.
+- **Flota**: 4 Torres Activas (12/12 monedas).
+- **Energía**: ✅ Vigilante + AWS Scheduler operativos.
+- **Monitoreo**: Conserje v4 activo en Telegram.
+- **Profits Destacados**: LINK (+196%), NEAR (+140%), SUI (+106%).
 
 ---
 
@@ -89,4 +88,4 @@ Asfixia de la instancia AWS (Load > 10.0, RAM < 20MB). Procesos zombis de Docker
 
 1. **Unificación**: No más archivos sueltos. Todo se amplía en esta **Bitácora**.
 2. **Sincronización**: Git push al terminar cada sesión de trabajo significativa.
-3. **Estado**: `memory/STATUS.md` es el mapa de situación actual.
+3. **Misión**: Continuidad operativa bajo protocolo Chacal V4.

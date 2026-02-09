@@ -54,11 +54,16 @@ class PegasoMemory:
             f.write(content)
 
     def build_master_prompt(self):
-        status_path = os.path.join(MEMORY_DIR, "STATUS.md")
+        # Buscamos el estado en la Bitácora unificada
+        bitacora_path = os.path.join(THREADS_DIR, "BITACORA_CHACAL_V4.md")
         status_content = ""
-        if os.path.exists(status_path):
-            with open(status_path, "r", encoding="utf-8") as f:
-                status_content = f.read()
+        if os.path.exists(bitacora_path):
+            with open(bitacora_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                # Extraemos la sección de Estado Actual
+                match = re.search(r"(## 📊 ESTADO ACTUAL:.*?)---", content, re.DOTALL)
+                if match:
+                    status_content = match.group(1).strip()
 
         prompt = f"# PROTOCOLO PEGASO: LLAVE DE ACTIVACION DE MEMORIA\n\n"
         prompt += f"**FECHA:** {datetime.date.today()}\n\n"
