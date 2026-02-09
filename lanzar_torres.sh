@@ -1,4 +1,7 @@
 #!/bin/bash
+# Actualizar IP DuckDNS (Silencioso y Rapido)
+curl -s "https://www.duckdns.org/update?domains=chacal-guru&token=6f2f059c-160c-4cd4-bce0-b7de64bdb2c8" > /dev/null
+
 # Matar todo lo anterior
 sudo docker stop chacal_alpha chacal_beta chacal_gamma chacal_delta 2>/dev/null
 sudo docker rm chacal_alpha chacal_beta chacal_gamma chacal_delta 2>/dev/null
