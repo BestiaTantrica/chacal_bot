@@ -29,6 +29,9 @@ Siguiente paso: Gestión de incidencias y refinamiento de parámetros según per
 
 ---
 ## ULTIMOS HILOS
+### BITACORA_CHACAL_V4.md
+Bitácora maestra del proyecto Chacal V4. Contiene la metodología, el registro de incidencias resueltas, los resultados de rentabilidad de la Fase 2 y el protocolo de gestión energética de AWS.
+
 
 ---
 **INSTRUCCION:** Continua desde aqui.

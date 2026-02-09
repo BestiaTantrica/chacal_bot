@@ -2,6 +2,10 @@
 
 *Registro cronológico de la estrategia, incidencias y despliegue.*
 
+## RESUMEN DE LA CHARLA
+
+Bitácora maestra del proyecto Chacal V4. Contiene la metodología, el registro de incidencias resueltas, los resultados de rentabilidad de la Fase 2 y el protocolo de gestión energética de AWS.
+
 ---
 
 ## 📅 2026-02-08 | METODOLOGÍA QUIRÚRGICA
