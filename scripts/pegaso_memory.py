@@ -68,17 +68,15 @@ class PegasoMemory:
         prompt = f"# PROTOCOLO PEGASO: LLAVE DE ACTIVACION DE MEMORIA\n\n"
         prompt += f"**FECHA:** {datetime.date.today()}\n\n"
         prompt += status_content + "\n\n"
-        prompt += "---\n## ULTIMOS HILOS\n"
-        
-        threads = sorted(os.listdir(THREADS_DIR), reverse=True)[:3]
+        # Sección de Hilos Recientes (Con contenido operativo real)
+        threads = sorted(os.listdir(THREADS_DIR), reverse=True)[:5]
         for t in threads:
-            with open(os.path.join(THREADS_DIR, t), "r", encoding="utf-8") as f:
-                content = f.read()
-                resumen_match = re.search(r"## RESUMEN DE LA CHARLA\r?\n+(.*)", content, re.DOTALL)
-                if resumen_match:
-                    texto = resumen_match.group(1).strip()
-                    texto = re.split(r"\r?\n---|\r?\n\.\.\.", texto)[0].strip()
-                    prompt += f"### {t}\n{texto[:500]}\n\n"
+            thread_path = os.path.join(THREADS_DIR, t)
+            with open(thread_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+                # Tomamos las últimas 50 líneas para que la IA tenga contexto de acción
+                context_chunk = "".join(lines[-50:])
+                prompt += f"### {t}\n{context_chunk}\n\n"
 
         prompt += "\n---\n**INSTRUCCION:** Continua desde aqui."
         with open(PROMPT_LLAVE_PATH, "w", encoding="utf-8") as f:
