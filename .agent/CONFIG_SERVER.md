@@ -4,7 +4,7 @@
 
 | Parámetro | Valor |
 |-----------|-------|
-| **IP Pública** | `56.125.187.241` |
+| **IP Pública** | `54.207.116.228` |
 | **Usuario** | `ec2-user` |
 | **Key SSH** | `llave-sao-paulo.pem` |
 | **Directorio Remoto** | `/home/ec2-user/chacal_bot` |
@@ -13,7 +13,7 @@
 ### Comando de Conexión SSH
 
 ```bash
-ssh -i llave-sao-paulo.pem ec2-user@56.125.187.241
+ssh -i llave-sao-paulo.pem ec2-user@54.207.116.228
 ```
 
 ---
@@ -33,11 +33,13 @@ ssh -i llave-sao-paulo.pem ec2-user@56.125.187.241
 ## 🔄 WORKFLOW ESTÁNDAR
 
 ### 1️⃣ PC LOCAL
+
 - Editar estrategia: `user_data/strategies/EstrategiaChacal.py`
 - Backtest local con Docker
 - Hyperopt local (si hay recursos suficientes)
 
 ### 2️⃣ GIT
+
 ```bash
 git add .
 git commit -m "mensaje descriptivo"
@@ -45,12 +47,13 @@ git push origin main
 ```
 
 ### 3️⃣ AWS DEPLOY
+
 ```bash
 # Automático
 desplegar_automatico.cmd
 
 # Manual
-powershell -ExecutionPolicy Bypass -File desplegar_aws.ps1 -Ip 56.125.187.241
+powershell -ExecutionPolicy Bypass -File desplegar_aws.ps1 -Ip 54.207.116.228
 ```
 
 ---
