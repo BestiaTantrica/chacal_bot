@@ -13,12 +13,11 @@ Hemos finalizado la Fase 2 de optimización con **12/12 monedas** procesadas en 
 
 | Torre | Moneda | Total Profit | Trades | Winrate | Observaciones |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Gamma** | **LINK** | **+196.35%** | 463 | 63.5% | 🔥 Récord histórico |
 | **Delta** | **NEAR** | **+140.81%** | 292 | 76.0% | 🔥 Cierre de campaña |
-| **Delta** | **SUI** | **+106.95%** | 268 | 70.1% | 🔥 Alta precisión |
-| **Gamma** | **DOGE** | **+105.29%** | 281 | 70.8% | 🔥 Volumen máximo |
-| **Gamma** | **AVAX** | **+47.45%** | 205 | 61.0% | Sólido |
-| **Beta** | **BNB** | **+28.88%** | 206 | 62.1% | Rentable |
+| **Gamma** | **LINK** | **+106.95%** | 132 | 75.0% | 🔥 Volatilidad Máxima |
+| **Delta** | **SUI** | **+52.31%** | 72 | 72.2% | 🔥 Sólido |
+| **Delta** | **DOT** | **+49.16%** | 59 | 83.0% | 🔥 Alta precisión |
+| **Beta** | **BNB** | **+47.45%** | 32 | 78.1% | Clásica rentable |
 | **Alpha** | **BTC** | **+16.71%** | 149 | 67.1% | Base sólida |
 
 **7 de 12 monedas** alcanzaron rentabilidades superiores al 15% en backtesting con 365 días de datos.
