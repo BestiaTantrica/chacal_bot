@@ -24,8 +24,10 @@
 - **Apagado**: ✅ Script `apagar_si_no_hay_trades.py` activo en Cron (07:15 ART).
   - Status: **EXITOSO** (Instancia apagada a las 07:15 ART).
 - **Encendido**: ✅ EventBridge AWS configurado por usuario (10:25 ART).
-- **Arranque Bots**: ⚠️ **PENDIENTE**. No se configuró `@reboot` en Crontab.
-  - **ACCIÓN REQUERIDA (10:30 ART)**: Entrar por SSH y ejecutar `bash lanzar_torres.sh`.
+- **Arranque Bots**: ✅ **RESUELTO (10:35 ART)**.
+  - Se ingresó manual (`ssh ... bash lanzar_torres.sh`).
+  - Se configuró `@reboot` en Crontab para futuros inicios.
+  - Bots operativos: 4 Torres + Conserje.
 
 ---
 
