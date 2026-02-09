@@ -68,17 +68,24 @@ class PegasoMemory:
         prompt = f"# PROTOCOLO PEGASO: LLAVE DE ACTIVACION DE MEMORIA\n\n"
         prompt += f"**FECHA:** {datetime.date.today()}\n\n"
         prompt += status_content + "\n\n"
-        # Sección de Hilos Recientes (Con contenido operativo real)
-        threads = sorted(os.listdir(THREADS_DIR), reverse=True)[:5]
+
+        # 1. INTEGRAR PROTOCOLO (LAS REGLAS DE ORO)
+        protocol_path = os.path.join(current_dir, ".chacal_protocol.md")
+        if os.path.exists(protocol_path):
+            with open(protocol_path, "r", encoding="utf-8") as f:
+                prompt += "## 📜 PROTOCOLO DE OPERACIONES (REGLAS Y TÉCNICA)\n"
+                prompt += f.read() + "\n\n"
+
+        # 2. INTEGRAR TODOS LOS HILOS DE MEMORIA (LA HISTORIA)
+        prompt += "## 📝 BITÁCORA Y ARCHIVO DE HILOS\n"
+        threads = sorted(os.listdir(THREADS_DIR), reverse=True)
         for t in threads:
             thread_path = os.path.join(THREADS_DIR, t)
             with open(thread_path, "r", encoding="utf-8") as f:
-                lines = f.readlines()
-                # Tomamos las últimas 50 líneas para que la IA tenga contexto de acción
-                context_chunk = "".join(lines[-50:])
-                prompt += f"### {t}\n{context_chunk}\n\n"
+                prompt += f"### ARCHIVO: {t}\n"
+                prompt += f.read() + "\n\n"
 
-        prompt += "\n---\n**INSTRUCCION:** Continua desde aqui."
+        prompt += "\n---\n**INSTRUCCION PARA IA:** Has recibido el búnker de información completo. Continúa la misión respetando el ahorro de energía y los horarios de trading (Londres/NY)."
         with open(PROMPT_LLAVE_PATH, "w", encoding="utf-8") as f:
             f.write(prompt)
 
