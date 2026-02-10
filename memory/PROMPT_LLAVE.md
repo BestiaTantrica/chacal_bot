@@ -5,11 +5,13 @@
 ## 📊 ESTADO ACTUAL: ONLINE (DRY RUN) 🔥
 
 - **Flota**: 4 Torres Activas (12/12 monedas).
-- **Energía**: ✅ Vigilante + AWS Scheduler operativos.
-- **Monitoreo**: Conserje v4 activo en Telegram.
-- **Profits Destacados**: LINK (+196%), NEAR (+140%), SUI (+106%).
+- **Energía**: ✅ Vigilante + EventBridge (Auto-Start) operativos.
+- **Monitoreo**: Lambda Híbrida (SSM) + Conserje v4.1 Monitor.
+- **Reporting**: Reporte unificado vía /status o /reporte (todas las torres).
+- **Capital**: $75 USDT/torre ($300 total) para eficiencia de margen.
 
 ## 📜 PROTOCOLO DE OPERACIONES (REGLAS Y TÉCNICA)
+
 # 📜 PROTOCOLO DE SUPERVIVENCIA "CHACAL" - REGLAS DE ORO
 
 **ESTE DOCUMENTO ES DE LECTURA OBLIGATORIA PARA EL AGENTE ANTES DE CUALQUIER COMANDO.**
@@ -98,7 +100,8 @@
 - **DESPLIEGUE MULTI-TORRE (t2.micro)**:
   - **Alpha**: BTC, ETH, SOL | **Beta**: BNB, XRP, ADA
   - **Gamma**: DOGE, AVAX, LINK | **Delta**: DOT, SUI, NEAR
-  - Arranque automático vía `@reboot` en crontab llamando a `lanzar_torres.sh`.
+  - **Balance**: $75 USDT por torre para maximizar uso de RAM y margen.
+  - **Arranque**: Automático vía `@reboot` y AWS EventBridge llamando a la Lambda.
 
 ## 9. ARQUITECTURA TÉCNICA (MANUAL PARA IA/HUMANO) 📕
 
@@ -110,16 +113,18 @@
 
 ### Infraestructura (t2.micro - Relevo V4)
 
-- **Torres Docker**: 4 contenedores (Alpha, Beta, Gamma, Delta) dividiendo 12 monedas por RAM.
-- **Vigilante Energía**: Script `vigilante_energia.py` escanea los 4 SQLite. El apagado se cancela si hay trades vivos.
-- **Arranque**: `lanzar_torres.sh` se ejecuta `@reboot`.
+- **Lambda Híbrida**: Centro de mando en AWS. Consulta las 4 torres vía SSM.
+- **Vigilante Energía**: Script `vigilante_energia.py` sincronizado con Horas Mágicas (No apaga en sesión).
+- **Arranque**: `lanzar_torres.sh` relanza el ecosistema post-reboot.
+- **Notificador**: Conserje V4.1 pasivo para alertas de trades.
 
 ---
 **Misión: Recuperar el capital con disciplina y precisión.**
 
-
 ## 📝 BITÁCORA Y ARCHIVO DE HILOS
+
 ### ARCHIVO: BITACORA_CHACAL_V4.md
+
 # 🦅 BITÁCORA UNIFICADA: MISIÓN CHACAL V4
 
 *Registro cronológico de la estrategia, incidencias y despliegue.*
@@ -211,8 +216,6 @@ Asfixia de la instancia AWS (Load > 10.0, RAM < 20MB). Procesos zombis de Docker
 1. **Unificación**: No más archivos sueltos. Todo se amplía en esta **Bitácora**.
 2. **Sincronización**: Git push al terminar cada sesión de trabajo significativa.
 3. **Misión**: Continuidad operativa bajo protocolo Chacal V4.
-
-
 
 ---
 **INSTRUCCION PARA IA:** Has recibido el búnker de información completo. Continúa la misión respetando el ahorro de energía y los horarios de trading (Londres/NY).
