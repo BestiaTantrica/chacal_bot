@@ -15,13 +15,25 @@ Este ecosistema se basa en 4 Torres de Trading operando en Docker:
 
 ### 🖥️ INFRAESTRUCTURA AWS (MÉTRICAS CLAVE)
 
-- **Memoria Absoluta:** SWAP de 4GB activo + 1GB RAM (Total 5GB Virtual). Pilar fundamental.
-- **Estabilidad de Ejecución:** Siempre usar `--job-workers 1` para Hyperopt y Backtest.
-- **Protocolos de Datos (Higiene Quirúrgica):**
-  - **Fase 2 (Refinado):** Hyperoptimización sobre 365 días de datos (1 año) para capturar ciclos de mercado completos.
-  - **Operación/Reportes:** Uso de `timerange` focalizado (30-60 días) solo para diagnósticos rápidos y validación de "Magic Hours".
-  - **Límites:** Máximo 10-15 pares activos por torre para no asfixiar la RAM en producción.
-- **ID Real:** `i-003dcde3a3dadd6ea` (sa-east-1).
+- **Memoria Absoluta:** SWAP de 4GB activo + 1GB RAM (Total 5GB Virtual).
+- **Estabilidad:** Siempre usar `--job-workers 1` en Hyperopt/Backtest.
+- **Higiene de Datos:**
+  - Fase 2: Robustez de 365 días (1 año).
+  - Operación: 30-60 días para agilidad táctica.
+
+## 🛰️ CONEXIÓN Y CONTROL (EL METAL)
+
+El agente debe conocer su territorio para operar sin preguntar:
+
+- **ID Instancia:** `i-003dcde3a3dadd6ea` (sa-east-1).
+- **IP Pública Maestro:** `56.124.22.155` (Variable, consultar via Boto3 si falla).
+- **Usuario SSH:** `ec2-user`.
+- **Llave Local (Windows):** `c:\Freqtrade\llave-sao-paulo.pem`.
+- **Ruta Remota:** `/home/ec2-user/chacal_bot`.
+- **Archivos de Poder:**
+  - `.env.aws`: Credenciales AWS (Boto3).
+  - `.env`: Tokens de Telegram (Conserje/Reports).
+  - `user_data/config_*.json`: El ADN de las 4 torres.
 
 ## 🎞️ EL PROTOCOLO DE FASES (MÉTODO DE ORO)
 
