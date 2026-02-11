@@ -23,13 +23,26 @@ Este ecosistema se basa en 4 Torres de Trading operando en Docker:
   - **Límites:** Máximo 10-15 pares activos por torre para no asfixiar la RAM en producción.
 - **ID Real:** `i-003dcde3a3dadd6ea` (sa-east-1).
 
-## 💎 LA ÚNICA VERDAD: FASE 2 (08/02/2026)
+## 🎞️ EL PROTOCOLO DE FASES (MÉTODO DE ORO)
 
-Todos los parámetros de éxito provienen de la **Optimización Quirúrgica de 5m** realizada el 08 de febrero.
+La optimización no es aleatoria; sigue un flujo de refinado quirúrgico:
+
+1. **FASE 1: PRECISIÓN (1m - Biblioteca Quirúrgica):**
+   - **Objetivo:** Detectar el gatillo exacto en las "Horas Mágicas".
+   - **Data:** Velas de 1 minuto segmentadas por aperturas de Londres/NY.
+   - **Histórico:** Mantenimiento de hasta 7 años en `binance_surgical`.
+2. **FASE 2: REFINADO (5m - Industrial):** ✅ **COMPLETADA 08/02/2026**
+   - **Objetivo:** Validar robustez para el despliegue real (evitar asfixia por comisiones).
+   - **Data:** **365 días (1 año)** de velas de 5m.
+   - **Intensidad:** 1000 épocas secuenciales (moneda por moneda).
+   - **La Verdad:** Los 12 `v_factors` actuales nacen de este proceso. No se tocan sin re-ejecutar esta fase.
+
+## 💎 LA ÚNICA VERDAD
 
 - **Fuente Suprema:** `user_data/logs/fase2_completa_20260208.log`.
-- **v_factor:** Cada par tiene su ADN. No aceptes valores genéricos. Consulta la `BITACORA_CHACAL_V4.md`.
-- **Vigilante:** El script `scripts/verificar_integridad_elite.py` es el seguro de vida. Su palabra es ley antes de cualquier `docker-compose up`.
+- **v_factor:** Cada par tiene su ADN (BTC: 4.660, NEAR: 2.772, etc.). Consulta la `BITACORA_CHACAL_V4.md`.
+- **Vigilante:** `scripts/verificar_integridad_elite.py` valida contra la Fase 2 real. Límite máximo: 6.0.
+ Su palabra es ley antes de cualquier `docker-compose up`.
 
 ## 🛡️ PROTOCOLOS ESTRATÉGICOS (PEGASO STRICT)
 
