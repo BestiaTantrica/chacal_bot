@@ -211,11 +211,24 @@ Asfixia de la instancia AWS (Load > 10.0, RAM < 20MB). Procesos zombis de Docker
 
 ---
 
-## 📜 PROTOCOLO DE MEMORIA PEGASO 3.1
+## 📅 2026-02-10 | SEGURIDAD Y PROTOCOLO PEGASO 3.1 ✅
 
-1. **Unificación**: No más archivos sueltos. Todo se amplía en esta **Bitácora**.
-2. **Sincronización**: Git push al terminar cada sesión de trabajo significativa.
-3. **Misión**: Continuidad operativa bajo protocolo Chacal V4.
+**Misión**: Eliminar secretos expuestos y blindar la memoria del agente.
+
+### 1. SANEAMIENTO DE SECRETOS
+
+- **Scripts**: `scripts/set_webhook_safe.py` actualizado para usar `.env.deployment`.
+- **Legacy**: `_legacy/config.json` ofuscado (token removido).
+- **Verificación**: `grep` recursivo confirma limpieza total de tokens conocidos.
+
+### 2. PROTOCOLO PEGASO 3.1 (EL BÚNKER)
+
+- **Reglas**: Implementado en `.agent/rules/PEGASO_STRICT.md`.
+- **Mandatos**:
+  - Revisión obligatoria de hilos pasados y KIs.
+  - Prohibición de secretos en texto plano.
+  - Raíz limpia: archivos de utilidad movidos a `scripts/`.
+  - Actualización constante de esta bitácora.
 
 ---
-**INSTRUCCION PARA IA:** Has recibido el búnker de información completo. Continúa la misión respetando el ahorro de energía y los horarios de trading (Londres/NY).
+**INSTRUCCION PARA IA:** Has recibido el búnker de información completo. Continúa la misión respetando el ahorro de energía y los horarios de trading (Londres/NY). NO EXPONGAS SECRETOS.

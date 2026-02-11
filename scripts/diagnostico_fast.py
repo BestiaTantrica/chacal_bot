@@ -69,7 +69,9 @@ def report():
         
         status = "🏹" if (hunting and data['open_count'] == 0) else ("🔥" if data['open_count'] > 0 else "💤")
         
-        print(f"<b>[{name}]</b> {status} | Cerrado: <b>${data['closed_profit']:+.2f}</b> | Abiertas: <b>{data['open_count']}</b>")
+        # Formato Compacto: 5C (+$0.21) | 0A
+        # C = Cerradas, A = Activas
+        print(f"<b>[{name}]</b> {status} | <b>{data['closed_count']}C</b> (${data['closed_profit']:+.2f}) | <b>{data['open_count']}A</b>")
         for ot in data['open_details']:
             print(f"   └ 🎯 {ot[0].split('/')[0]} ({ot[1]:+.2f}%)")
             
