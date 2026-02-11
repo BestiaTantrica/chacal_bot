@@ -52,13 +52,13 @@ def run_flash_report():
     
     # 3. Enviar a Telegram
     TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-    CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+    CHAT_ID = os.getenv("TELEGRAM_CHAT_ID") or os.getenv("CHAT_ID")
     
     # Fallback a .env local
-    if not TELEGRAM_TOKEN:
+    if not TELEGRAM_TOKEN or not CHAT_ID:
         load_dotenv(os.path.join('c:/Freqtrade', '.env'))
         TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-        CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+        CHAT_ID = os.getenv("TELEGRAM_CHAT_ID") or os.getenv("CHAT_ID")
         
     if TELEGRAM_TOKEN and CHAT_ID:
         import urllib.parse, urllib.request
