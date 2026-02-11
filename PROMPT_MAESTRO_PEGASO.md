@@ -15,10 +15,12 @@ Este ecosistema se basa en 4 Torres de Trading operando en Docker:
 
 ### 🖥️ INFRAESTRUCTURA AWS (MÉTRICAS CLAVE)
 
-- **Instancia Central:** EC2 `t2.micro` (sa-east-1 São Paulo).
-- **ID Real:** `i-003dcde3a3dadd6ea` (NUNCA USAR OTRO ID).
-- **Conserje Lambda:** Gestiona el encendido/apagado en `us-east-1` y `sa-east-1` bajo **Python 3.12**.
-- **Memoria:** SWAP de 4GB activo para soportar Hyperopt y 4 torres simultáneas sin crash.
+- **Memoria Absoluta:** SWAP de 4GB activo + 1GB RAM (Total 5GB Virtual). Pilar fundamental de la arquitectura.
+- **Estabilidad:** Siempre usar `--job-workers 1` en Hyperopt y Backtest. NUNCA exceder este límite en esta instancia.
+- **Higiene de Datos:**
+  - Máximo 60 días de historia (`timerange` focalizado).
+  - Máximo 10-15 pares activos por torre.
+- **ID Real:** `i-003dcde3a3dadd6ea` (sa-east-1).
 
 ## 💎 LA ÚNICA VERDAD: FASE 2 (08/02/2026)
 
