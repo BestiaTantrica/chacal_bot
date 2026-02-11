@@ -15,11 +15,12 @@ Este ecosistema se basa en 4 Torres de Trading operando en Docker:
 
 ### 🖥️ INFRAESTRUCTURA AWS (MÉTRICAS CLAVE)
 
-- **Memoria Absoluta:** SWAP de 4GB activo + 1GB RAM (Total 5GB Virtual). Pilar fundamental de la arquitectura.
-- **Estabilidad:** Siempre usar `--job-workers 1` en Hyperopt y Backtest. NUNCA exceder este límite en esta instancia.
-- **Higiene de Datos:**
-  - Máximo 60 días de historia (`timerange` focalizado).
-  - Máximo 10-15 pares activos por torre.
+- **Memoria Absoluta:** SWAP de 4GB activo + 1GB RAM (Total 5GB Virtual). Pilar fundamental.
+- **Estabilidad de Ejecución:** Siempre usar `--job-workers 1` para Hyperopt y Backtest.
+- **Protocolos de Datos (Higiene Quirúrgica):**
+  - **Fase 2 (Refinado):** Hyperoptimización sobre 365 días de datos (1 año) para capturar ciclos de mercado completos.
+  - **Operación/Reportes:** Uso de `timerange` focalizado (30-60 días) solo para diagnósticos rápidos y validación de "Magic Hours".
+  - **Límites:** Máximo 10-15 pares activos por torre para no asfixiar la RAM en producción.
 - **ID Real:** `i-003dcde3a3dadd6ea` (sa-east-1).
 
 ## 💎 LA ÚNICA VERDAD: FASE 2 (08/02/2026)
