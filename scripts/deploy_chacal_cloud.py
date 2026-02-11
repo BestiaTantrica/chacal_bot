@@ -58,7 +58,7 @@ def deploy_lambda(role_arn):
     try:
         resp = lambda_client.create_function(
             FunctionName=FUNC_NAME,
-            Runtime='python3.9',
+            Runtime='python3.12',
             Role=role_arn,
             Handler='lambda_function.lambda_handler',
             Code={'ZipFile': zipped_code},

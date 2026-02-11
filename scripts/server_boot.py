@@ -45,12 +45,12 @@ def run_flash_report():
     
     # Enviar (usando curl simple para no depender de librerias extra si faltan)
     TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-    CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+    CHAT_ID = os.getenv("CHAT_ID")
     if not TELEGRAM_TOKEN:
         # Intentar cargar de .env normal
         load_dotenv(os.path.join(BASE_DIR, ".env"))
         TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-        CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+        CHAT_ID = os.getenv("CHAT_ID")
         
     if TELEGRAM_TOKEN and CHAT_ID:
         import urllib.parse, urllib.request
@@ -59,9 +59,12 @@ def run_flash_report():
             urllib.request.urlopen(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage", data=data)
         except: pass
         
-    # 3. APAGAR
-    print("💤 Apagando servidor...")
+    # 3. APAGAR solo si estamos en modo flash
+    time.sleep(5) # Delay para asegurar envio
+    print("💤 Reporte enviado. Apagando servidor...")
     ec2 = boto3.client('ec2', region_name=REGION, aws_access_key_id=AWS_ID, aws_secret_access_key=AWS_KEY)
+    # Limpiar el TAG de modo antes de apagar
+    ec2.create_tags(Resources=[INSTANCE_ID], Tags=[{'Key': 'MODE', 'Value': 'NORMAL'}])
     ec2.stop_instances(InstanceIds=[INSTANCE_ID])
 
 def run_hyperopt():

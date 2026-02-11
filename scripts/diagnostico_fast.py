@@ -18,7 +18,11 @@ def is_magic_hour():
     return False
 
 def analyze_torre(name, path):
-    if not os.path.exists(path): return None
+    if not os.path.exists(path): 
+        # Intentar ruta relativa si la absoluta falla (para pruebas locales)
+        local_path = os.path.join("user_data", os.path.basename(path))
+        if os.path.exists(local_path): path = local_path
+        else: return None
     try:
         conn = sqlite3.connect(path)
         c = conn.cursor()
@@ -73,6 +77,7 @@ def report():
     print(f"💰 <b>PROFIT TOTAL: ${total_p:+.2f}</b>")
     print(f"⚖️ <b>USDT ESTIMADO: ${(75*4)+total_p:.2f}</b>")
     print(f"📡 <b>OPS ACTIVAS: {total_open}</b>")
+    # Asegurar que el mensaje no sea demasiado largo
     
 if __name__ == "__main__":
     report()
