@@ -5,9 +5,28 @@
 ## 📊 ESTADO ACTUAL: ONLINE (DRY RUN) 🔥
 
 - **Flota**: 4 Torres Activas (12/12 monedas).
+- **Resiliencia**: ✅ Cierre Forzado +15min (V6) y Blindaje de Red activos.
 - **Energía**: ✅ Vigilante + AWS Scheduler operativos.
-- **Monitoreo**: Conserje v4 activo en Telegram (Texto Plano).
-- **Profits Destacados**: Historial limpio desde $300 (09/02/2026).
+- **Monitoreo**: Conserje v4 activo en Telegram.
+- **Profits**: Recuperando tras incidencia técnica de Binance API.
+
+---
+
+## 📅 2026-02-12 | MISIÓN: ESTABILIZACIÓN Y BLINDAJE (PROT. RESILIENCIA)
+
+### 🚨 INCIDENCIA: BLOQUEO DE API BINANCE
+
+- **Problema**: Falla de conectividad con Binance API (RequestTimeout).
+- **Efecto**: Un trade de BTC quedó "atrapado" por 14 horas porque el bot perdió el pulso del mercado y no pudo ejecutar el cierre dinámico.
+- **Resolución**: Liquidación manual de base de datos y purga de contenedores zombies.
+
+### 🛡️ PROTOCOLO DE RESILIENCIA SNIPER V4
+
+Se implementaron 3 capas de seguridad para evitar bloqueos futuros:
+
+1. **CIERRE FORZADO (+15 MIN)**: La estrategia (V6) ahora liquida TODOS los trades 15 minutos después de terminar las Ventanas Mágicas (8:00-10:00 y 13:30-17:30 UTC). No se permite arrastrar trades a zonas muertas.
+2. **STOPLOSS ON EXCHANGE**: Los archivos JSON ahora colocan el StopLoss real en Binance apenas abre el trade. Si el servidor cae, Binance protege el capital.
+3. **CIRCUIT BREAKER DE RED**: Configuración CCXT con reintentos agresivos y timeouts cortos para reaccionar rápido ante caídas de API.
 
 ---
 
