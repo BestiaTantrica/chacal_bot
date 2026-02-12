@@ -19,20 +19,20 @@ lambda_client = boto3.client('lambda', region_name=REGION, aws_access_key_id=AWS
 def setup_eventbridge_rules():
     print("Configurando reglas de encendido automático...")
     
-    # 1. Regla AM (10:15 UTC)
+    # 1. Regla AM (07:50 UTC - Pre-Londres)
     rule_am = events.put_rule(
         Name="SniperV4_Start_AM",
-        ScheduleExpression="cron(15 10 * * ? *)", # 10:15 UTC
+        ScheduleExpression="cron(50 7 * * ? *)", # 07:50 UTC
         State='ENABLED',
-        Description="Enciende Sniper V4 para la ventana AM"
+        Description="Enciende Sniper V4 para la ventana AM (Londres)"
     )
     
-    # 2. Regla PM (17:45 UTC)
+    # 2. Regla PM (13:20 UTC - Pre-New York)
     rule_pm = events.put_rule(
         Name="SniperV4_Start_PM",
-        ScheduleExpression="cron(45 17 * * ? *)", # 17:45 UTC
+        ScheduleExpression="cron(20 13 * * ? *)", # 13:20 UTC
         State='ENABLED',
-        Description="Enciende Sniper V4 para la ventana PM"
+        Description="Enciende Sniper V4 para la ventana PM (New York)"
     )
     
     # Target: La Lambda chacal_bot_v2 con un payload que fuerce el encendido
