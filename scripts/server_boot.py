@@ -44,7 +44,7 @@ def run_flash_report():
 
     # 2. Ejecutar y capturar salida
     try:
-        result = subprocess.run(["python", diag_script], capture_output=True, text=True).stdout
+        result = subprocess.run(["python3", diag_script], capture_output=True, text=True).stdout
         if not result:
             result = "INFO: El diagnostico no genero salida."
     except Exception as e:
@@ -99,6 +99,8 @@ def run_default():
     pass
 
 if __name__ == "__main__":
+    # Esperar a que la red este lista
+    time.sleep(15)
     mode = os.getenv("OVERRIDE_MODE") or get_instance_mode()
     print(f"Iniciando en modo: {mode}")
     
