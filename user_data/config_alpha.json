@@ -88,7 +88,7 @@
                 "v_factor": 5.769
             },
             "SOL/USDT:USDT": {
-                "operation_mode": "vigilante",
+                "operation_mode": "hunter",
                 "pulse_change": 0.005,
                 "v_factor": 5.386
             }

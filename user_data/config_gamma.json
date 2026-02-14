@@ -78,17 +78,17 @@
     "params": {
         "buy": {
             "DOGE/USDT:USDT": {
-                "operation_mode": "vigilante",
+                "operation_mode": "hunter",
                 "pulse_change": 0.005,
                 "v_factor": 5.795
             },
             "AVAX/USDT:USDT": {
-                "operation_mode": "vigilante",
+                "operation_mode": "hunter",
                 "pulse_change": 0.005,
                 "v_factor": 5.692
             },
             "LINK/USDT:USDT": {
-                "operation_mode": "vigilante",
+                "operation_mode": "hunter",
                 "pulse_change": 0.005,
                 "v_factor": 5.671
             }
