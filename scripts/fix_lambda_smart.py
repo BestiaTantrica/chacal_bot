@@ -3,6 +3,7 @@ import os
 import json
 import zipfile
 import io
+import time
 from dotenv import load_dotenv
 
 # Load env
@@ -80,29 +81,38 @@ def lambda_handler(event, context):
             
             if state == 'running':
                 # Intentar ejecutar SSM
-                cmd = "python3 /home/ec2-user/chacal_bot/scripts/diagnostico_fast.py"
+                # Using 'runuser' to execute as ec2-user and avoid "dubious ownership" git errors
+                cmd = "runuser -l ec2-user -c 'python3 /home/ec2-user/chacal_bot/scripts/diagnostico_fast.py'"
                 try:
                     ssm_resp = ssm.send_command(
                         InstanceIds=[INSTANCE_ID],
                         DocumentName="AWS-RunShellScript",
                         Parameters={'commands': [cmd]},
-                        TimeoutSeconds=10
+                        TimeoutSeconds=30
                     )
                     command_id = ssm_resp['Command']['CommandId']
                     
                     # Esperar resultado (Polling breve)
                     output_text = ""
+                    error_text = ""
                     status = "Pending"
-                    for _ in range(6): # 6 attempts * 1s = 6s wait max
+                    
+                    for _ in range(25): # 25s wait max
                         time.sleep(1)
                         out = ssm.get_command_invocation(CommandId=command_id, InstanceId=INSTANCE_ID)
                         status = out['Status']
+                        
                         if status in ['Success', 'Failed', 'Cancelled', 'TimedOut']:
                             output_text = out.get('StandardOutputContent', '')
+                            error_text = out.get('StandardErrorContent', '')
                             break
                     
                     if output_text.strip():
                         send_telegram(f"🛰️ <b>SISTEMA SNIPER V4</b>\n{output_text}")
+                    elif error_text.strip():
+                        send_telegram(f"⚠️ <b>Error en Comando:</b>\n{error_text}")
+                    elif status == 'Failed':
+                        send_telegram("⚠️ <b>Error Crítico:</b> El comando falló sin dejar rastro.")
                     else:
                         # Si Success pero vacio, o Failed sin output -> Booting
                         send_telegram("⏳ <b>Cargando módulos...</b> (El servidor despertó, reintente en 30s)")
@@ -149,6 +159,13 @@ def update_lambda_code():
             ZipFile=zip_output.read()
         )
         print("Lambda updated successfully.")
+
+        print("Updating Lambda Configuration (Timeout=60s)...")
+        lambda_client.update_function_configuration(
+            FunctionName='chacal_bot_v2',
+            Timeout=60
+        )
+        print("Configuration updated.")
     except Exception as e:
         print(f"Error updating lambda: {e}")
 
