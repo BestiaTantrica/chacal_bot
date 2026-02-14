@@ -50,7 +50,7 @@ class ChacalPulseV4_Hyperopt(IStrategy):
     # Parámetros Hyperoptables (Entrada)
     v_factor = DecimalParameter(1.5, 6.0, default=4.319, space="buy", optimize=True)
     pulse_change = DecimalParameter(0.0005, 0.005, default=0.004, space="buy", optimize=True)
-    operation_mode = CategoricalParameter(['hunter', 'vigilante'], default='hunter', space="buy", optimize=True)
+
 
     # --- LEVERAGE (FUTURES REALES) ---
     def leverage(self, **kwargs) -> float:
@@ -82,13 +82,9 @@ class ChacalPulseV4_Hyperopt(IStrategy):
             'is_pulse_window'
         ] = 1
 
-        # Lógica de Gatillo según el modo
-        # Hunter: Solo en ventana. Vigilante: Siempre activo.
+        # Todo es Modo Hunter: Solo en ventana.
         dataframe['gate_open'] = 0
-        if self.operation_mode.value == 'hunter':
-            dataframe.loc[dataframe['is_pulse_window'] == 1, 'gate_open'] = 1
-        else:
-            dataframe.loc[:, 'gate_open'] = 1
+        dataframe.loc[dataframe['is_pulse_window'] == 1, 'gate_open'] = 1
 
         dataframe['price_change'] = (dataframe['close'] - dataframe['open']) / dataframe['open']
         

@@ -78,17 +78,14 @@
     "params": {
         "buy": {
             "BNB/USDT:USDT": {
-                "operation_mode": "hunter",
                 "pulse_change": 0.005,
                 "v_factor": 3.378
             },
             "XRP/USDT:USDT": {
-                "operation_mode": "hunter",
                 "pulse_change": 0.005,
                 "v_factor": 5.133
             },
             "ADA/USDT:USDT": {
-                "operation_mode": "hunter",
                 "pulse_change": 0.005,
                 "v_factor": 3.408
             }
