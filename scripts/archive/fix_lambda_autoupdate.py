@@ -73,17 +73,22 @@ def lambda_handler(event, context):
 
         # Comandos de Reporte
         is_report_cmd = any(cmd in text for cmd in ['/status', '/reporte', 'flash', 'informe'])
+        is_kill_cmd = any(cmd in text for cmd in ['/kill', '/off', '/stop', 'apagar'])
         
+        if is_kill_cmd:
+            send_telegram("🛑 <b>KILL-SWITCH ACTIVADO</b>\nSolicitando apagado directo de la instancia vía AWS API...")
+            ec2.stop_instances(InstanceIds=[INSTANCE_ID])
+            return respond(200, {'message': 'Kill command executed'})
+
         if is_report_cmd:
             resp = ec2.describe_instances(InstanceIds=[INSTANCE_ID])
             state = resp['Reservations'][0]['Instances'][0]['State']['Name']
             print(f"Instance State: {state}")
             
             if state == 'running':
-                # COMMAND: Force Git Pull -> Run Diagnostico
-                # Using 'reset --hard' to ensure we have the EXACT version from repo ("Orbit Protocol")
-                # Using 'runuser' to execute as ec2-user and avoid "dubious ownership" git errors
-                cmd = "runuser -l ec2-user -c 'cd /home/ec2-user/chacal_bot && git fetch origin && git reset --hard origin/main && python3 scripts/diagnostico_fast.py'"
+                # COMMAND: Safe Git Pull -> Run Diagnostico
+                # Preserve local truth. Avoid destructive resets.
+                cmd = "runuser -l ec2-user -c 'cd /home/ec2-user/chacal_bot && git pull origin main && python3 scripts/diagnostico_fast.py'"
                 
                 try:
                     ssm_resp = ssm.send_command(

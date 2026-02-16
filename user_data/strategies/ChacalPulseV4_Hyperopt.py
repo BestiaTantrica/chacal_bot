@@ -47,9 +47,29 @@ class ChacalPulseV4_Hyperopt(IStrategy):
     # Timeframe
     timeframe = '5m'
     
-    # Parámetros Hyperoptables (Entrada)
+    # --- VALORES OFICIALES FASE 2 (GRABADOS A FUEGO) ---
+    v_factors_map = {
+        "BTC/USDT:USDT": 4.660,
+        "ETH/USDT:USDT": 5.769,
+        "SOL/USDT:USDT": 5.386,
+        "BNB/USDT:USDT": 3.378,
+        "XRP/USDT:USDT": 5.133,
+        "ADA/USDT:USDT": 3.408,
+        "DOGE/USDT:USDT": 5.795,
+        "AVAX/USDT:USDT": 5.692,
+        "LINK/USDT:USDT": 5.671,
+        "DOT/USDT:USDT": 5.051,
+        "SUI/USDT:USDT": 5.508,
+        "NEAR/USDT:USDT": 2.772
+    }
+
+    # Parámetros Hyperoptables (Solo como referencia, el mapa manda)
     v_factor = DecimalParameter(1.5, 6.0, default=4.319, space="buy", optimize=True)
     pulse_change = DecimalParameter(0.0005, 0.005, default=0.004, space="buy", optimize=True)
+
+    def get_v_factor(self, pair: str) -> float:
+        """Retorna el v_factor oficial o un valor defensivo alto."""
+        return self.v_factors_map.get(pair, 6.0)
 
 
     # --- LEVERAGE (FUTURES REALES) ---
@@ -71,8 +91,8 @@ class ChacalPulseV4_Hyperopt(IStrategy):
         dataframe['hour'] = dataframe['date_utc'].dt.hour
         dataframe['minute'] = dataframe['date_utc'].dt.minute
         
-        # Ventana 1: 05:00 - 07:00 ART (08:00 - 10:00 UTC)
-        # Ventana 2: 10:30 - 14:30 ART (13:30 - 17:30 UTC)
+        # Ventana 1: 08:00 - 10:00 UTC (Londres)
+        # Ventana 2: 13:30 - 17:30 UTC (NY)
         dataframe['is_pulse_window'] = 0
         dataframe.loc[
             ((dataframe['hour'] >= 8) & (dataframe['hour'] < 10)) | 
@@ -163,7 +183,7 @@ class ChacalPulseV4_Hyperopt(IStrategy):
         # LONG: Ventana + Vol Spike + Precio Up
         pulse_long = (
             (dataframe['gate_open'] == 1) &
-            (dataframe['volume'] > (dataframe['volume_mean'] * self.v_factor.value)) &
+            (dataframe['volume'] > (dataframe['volume_mean'] * self.get_v_factor(metadata['pair']))) &
             (dataframe['price_change'] > self.pulse_change.value) &
             (dataframe['rsi'] < 80)
         )
@@ -179,7 +199,7 @@ class ChacalPulseV4_Hyperopt(IStrategy):
         # SHORT: Ventana + Vol Spike + Precio Down
         pulse_short = (
             (dataframe['gate_open'] == 1) &
-            (dataframe['volume'] > (dataframe['volume_mean'] * self.v_factor.value)) &
+            (dataframe['volume'] > (dataframe['volume_mean'] * self.get_v_factor(metadata['pair']))) &
             (dataframe['price_change'] < -self.pulse_change.value) &
             (dataframe['rsi'] > 20)
         )

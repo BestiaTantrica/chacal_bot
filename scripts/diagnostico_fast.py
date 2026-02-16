@@ -1,6 +1,7 @@
 import sqlite3
 import os
-from datetime import datetime, timezone
+import subprocess
+from datetime import datetime, timezone, timedelta
 
 # Protocolo Sniper V4 - Rutas de las Torres
 DBS = {
@@ -12,29 +13,28 @@ DBS = {
 
 def is_magic_hour():
     now = datetime.now(timezone.utc)
-    # Londres: 08-10 UTC | NY: 13:30-17:30 UTC
-    if (8 <= now.hour < 10) or (now.hour == 13 and now.minute >= 30) or (14 <= now.hour < 17) or (now.hour == 17 and now.minute <= 30):
-        return True
-    return False
+    # Ventana Londres: 08:00 - 10:00 UTC (+15m gracia = 10:15)
+    londres = (now.hour == 8 or now.hour == 9) or (now.hour == 10 and now.minute <= 15)
+    
+    # Ventana NY: 13:30 - 17:30 UTC (+15m gracia = 17:45)
+    ny = (now.hour == 13 and now.minute >= 30) or (14 <= now.hour <= 16) or (now.hour == 17 and now.minute <= 45)
+    
+    return londres or ny
 
 def analyze_torre(name, path):
-    if not os.path.exists(path): 
-        # Intentar ruta relativa si la absoluta falla (para pruebas locales)
-        local_path = os.path.join("user_data", os.path.basename(path))
-        if os.path.exists(local_path): path = local_path
-        else: return None
+    if not os.path.exists(path): return None
     try:
         conn = sqlite3.connect(path)
         c = conn.cursor()
         
-        # 1. Histórico (Cerradas)
+        # Histórico (Cerradas)
         c.execute("SELECT close_profit_abs FROM trades WHERE is_open=0")
         closed = [x[0] for x in c.fetchall() if x[0] is not None]
         
-        # 2. Activas (Abiertas)
+        # Activas (Abiertas)
         c.execute("PRAGMA table_info(trades)")
         cols = [col[1] for col in c.fetchall()]
-        q = "SELECT pair, current_profit_abs FROM trades WHERE is_open=1" if "current_profit_abs" in cols else "SELECT pair, 0 FROM trades WHERE is_open=1"
+        q = "SELECT pair, current_profit_abs, open_date FROM trades WHERE is_open=1" if "current_profit_abs" in cols else "SELECT pair, 0, open_date FROM trades WHERE is_open=1"
         c.execute(q)
         open_trades = c.fetchall()
         
@@ -50,10 +50,11 @@ def analyze_torre(name, path):
 
 def report():
     hunting = is_magic_hour()
-    now_str = datetime.now(timezone.utc).strftime('%H:%M:%S')
+    now_utc = datetime.now(timezone.utc)
+    now_str = now_utc.strftime('%H:%M:%S')
     
-    print(f"🛰️ <b>SISTEMA SNIPER V4</b> | {now_str} UTC")
-    print(f"ESTADO GLOBAL: {'🏹 <b>CAZANDO (HUNTING)</b>' if hunting else '💤 <b>MODO ESPERA (IDLE)</b>'}\n")
+    print(f"🛰️ <b>CHACAL V4 | REPORTE PREMIUM</b>\n⏰ <code>{now_str} UTC</code>")
+    print(f"ESTADO: {'🏹 <b>HUNTING</b>' if hunting else '💤 <b>IDLE (FUERA DE HORA)</b>'}\n")
     
     total_p = 0
     total_open = 0
@@ -61,7 +62,7 @@ def report():
     for name, path in DBS.items():
         data = analyze_torre(name, path)
         if not data:
-            print(f"<b>[{name}]</b>: ⚪ Sin conexión")
+            print(f"<b>[{name}]</b>: ⚪ Offline")
             continue
             
         total_p += data['closed_profit']
@@ -69,17 +70,27 @@ def report():
         
         status = "🏹" if (hunting and data['open_count'] == 0) else ("🔥" if data['open_count'] > 0 else "💤")
         
-        # Formato Compacto: 5C (+$0.21) | 0A
-        # C = Cerradas, A = Activas
-        print(f"<b>[{name}]</b> {status} | <b>{data['closed_count']}C</b> (${data['closed_profit']:+.2f}) | <b>{data['open_count']}A</b>")
+        # Visual: [NAME] 🔥 | $ +1.20 | 1 Activa
+        print(f"<b>[{name}] {status}</b> | <code>${data['closed_profit']:+.2f}</code> | {data['open_count']}A")
         for ot in data['open_details']:
-            print(f"   └ 🎯 {ot[0].split('/')[0]} ({ot[1]:+.2f}%)")
+            pair = ot[0].split('/')[0]
+            profit = ot[1]
+            print(f"   └ 🎯 {pair} (<code>{profit:+.2f}%</code>)")
             
     print("\n" + "═"*25)
     print(f"💰 <b>PROFIT TOTAL: ${total_p:+.2f}</b>")
-    print(f"⚖️ <b>USDT ESTIMADO: ${(75*4)+total_p:.2f}</b>")
-    print(f"📡 <b>OPS ACTIVAS: {total_open}</b>")
-    # Asegurar que el mensaje no sea demasiado largo
+    print(f"⚖️ <b>SOPORTE USDT: ${300 + total_p:.2f}</b>")
     
+    # LÓGICA DE APAGADO AGRESIVO
+    if not hunting and total_open == 0 and not os.path.exists('/tmp/NO_APAGAR'):
+        print("\n⚡ <b>ZONA MUERTA DETECTADA</b>")
+        print("🛑 Iniciando apagado de seguridad...")
+        # Ejecutar apagado tras 5 segundos para dar tiempo a que el mensaje de Lambda termine
+        subprocess.Popen("sleep 5 && sudo shutdown -h now", shell=True)
+    elif not hunting and total_open > 0:
+        print(f"\n⏳ <b>ALERTA:</b> {total_open} trades huérfanos. Manteniendo energía.")
+    elif hunting:
+        print("\n🎯 <b>VENTANA ABIERTA:</b> Operando a full.")
+
 if __name__ == "__main__":
     report()
