@@ -78,12 +78,12 @@
     "params": {
         "buy": {
             "DOT/USDT:USDT": {
-                "pulse_change": 0.005,
-                "v_factor": 5.671
+                "pulse_change": 0.001,
+                "v_factor": 5.051
             },
             "SUI/USDT:USDT": {
                 "pulse_change": 0.001,
-                "v_factor": 5.051
+                "v_factor": 5.508
             },
             "NEAR/USDT:USDT": {
                 "pulse_change": 0.001,

@@ -78,11 +78,11 @@
     "params": {
         "buy": {
             "BNB/USDT:USDT": {
-                "pulse_change": 0.005,
+                "pulse_change": 0.003,
                 "v_factor": 3.378
             },
             "XRP/USDT:USDT": {
-                "pulse_change": 0.005,
+                "pulse_change": 0.004,
                 "v_factor": 5.133
             },
             "ADA/USDT:USDT": {

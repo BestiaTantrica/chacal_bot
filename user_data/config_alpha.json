@@ -78,15 +78,15 @@
     "params": {
         "buy": {
             "BTC/USDT:USDT": {
-                "pulse_change": 0.005,
+                "pulse_change": 0.004,
                 "v_factor": 4.660
             },
             "ETH/USDT:USDT": {
-                "pulse_change": 0.005,
+                "pulse_change": 0.004,
                 "v_factor": 5.769
             },
             "SOL/USDT:USDT": {
-                "pulse_change": 0.005,
+                "pulse_change": 0.001,
                 "v_factor": 5.386
             }
         }
