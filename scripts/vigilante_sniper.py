@@ -161,19 +161,33 @@ def main():
 
                 if has_open_trades():
                     log("Zona Muerta + 15min Excedido. Trades Abiertos detectados.")
-                    # HERE IS THE REQUESTED LOGIC:
-                    # "15 minutos depues dela hora magica si hay trades abiertos se cerraban"
                     log("EJECUTANDO PROTOCOLO CIERRE FORZADO (Venta a Mercado)...")
                     
-                    # Command to force exit all on all containers
-                    # docker exec chacal_alpha freqtrade exit-positions --config /freqtrade/user_data/config_alpha.json --strategy-path /freqtrade/user_data/strategies
-                    # Simplifying:
+                    # Intento 1 de Cierre
                     subprocess.run("docker exec chacal_alpha freqtrade exit-positions -c user_data/config_alpha.json", shell=True)
                     subprocess.run("docker exec chacal_beta freqtrade exit-positions -c user_data/config_beta.json", shell=True)
                     subprocess.run("docker exec chacal_gamma freqtrade exit-positions -c user_data/config_gamma.json", shell=True)
                     subprocess.run("docker exec chacal_delta freqtrade exit-positions -c user_data/config_delta.json", shell=True)
                     
-                    time.sleep(30) # Wait for execution
+                    time.sleep(45) # Esperar ejecución
+
+                    # Verificación post-intento
+                    if has_open_trades():
+                        log("⚠️ ALERTA: Trades siguen abiertos tras primer intento. Reintentando...")
+                        time.sleep(15)
+                        subprocess.run("docker exec chacal_alpha freqtrade exit-positions -c user_data/config_alpha.json", shell=True)
+                        subprocess.run("docker exec chacal_beta freqtrade exit-positions -c user_data/config_beta.json", shell=True)
+                        subprocess.run("docker exec chacal_gamma freqtrade exit-positions -c user_data/config_gamma.json", shell=True)
+                        subprocess.run("docker exec chacal_delta freqtrade exit-positions -c user_data/config_delta.json", shell=True)
+                        time.sleep(45)
+
+                    # Verificación Final
+                    if has_open_trades():
+                        log("❌ ERROR CRÍTICO: No se pudieron cerrar los trades force_exit trigger. ABORTANDO APAGADO para proteger capital.")
+                        # NO APAGAR: Dejar instancia viva para que el trade se gestione manualmente o por ROI/Stoploss si el bot sigue vivo.
+                        continue 
+                    else:
+                        log("✅ Trades cerrados correctamente. Procediendo al apagado.")
                     
                 log("Apagando Instancia (Ahorro AWS)...")
                 subprocess.run(["sudo", "shutdown", "-h", "now"])
