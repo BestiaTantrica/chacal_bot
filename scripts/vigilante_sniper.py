@@ -115,6 +115,14 @@ def check_magic_hours():
         
     return in_window, now_utc
 
+def get_uptime_minutes():
+    try:
+        with open('/proc/uptime', 'r') as f:
+            uptime_seconds = float(f.readline().split()[0])
+            return uptime_seconds / 60
+    except:
+        return 9999 # Fallback if cannot read uptime
+
 def main():
     log("Vigilante Sniper V4: Iniciando Guardiana (Buffer 15min)")
     while True:
@@ -143,7 +151,14 @@ def main():
             gap1_force = (minute_of_day >= 615 and minute_of_day < 810) # 10:15 - 13:30
             gap2_force = (minute_of_day >= 1065 or minute_of_day < 480) # 17:45 - 08:00
             
-            if gap1_force or gap2_force:
+            uptime = get_uptime_minutes()
+            
+            if (gap1_force or gap2_force):
+                if uptime < 15:
+                    log(f"Zona Muerta pero ARRANQUE RECIENTE ({uptime:.1f} min). Omitiendo apagado x Periodo de Gracia.")
+                    time.sleep(CHECK_INTERVAL)
+                    continue
+
                 if has_open_trades():
                     log("Zona Muerta + 15min Excedido. Trades Abiertos detectados.")
                     # HERE IS THE REQUESTED LOGIC:

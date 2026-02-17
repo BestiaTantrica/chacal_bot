@@ -80,17 +80,12 @@ def report():
     print("\n" + "═"*25)
     print(f"💰 <b>PROFIT TOTAL: ${total_p:+.2f}</b>")
     print(f"⚖️ <b>SOPORTE USDT: ${300 + total_p:.2f}</b>")
+    print(f"📡 <b>OPS ACTIVAS: {total_open}</b>")
     
-    # LÓGICA DE APAGADO AGRESIVO
-    if not hunting and total_open == 0 and not os.path.exists('/tmp/NO_APAGAR'):
-        print("\n⚡ <b>ZONA MUERTA DETECTADA</b>")
-        print("🛑 Iniciando apagado de seguridad...")
-        # Ejecutar apagado tras 5 segundos para dar tiempo a que el mensaje de Lambda termine
-        subprocess.Popen("sleep 5 && sudo shutdown -h now", shell=True)
-    elif not hunting and total_open > 0:
-        print(f"\n⏳ <b>ALERTA:</b> {total_open} trades huérfanos. Manteniendo energía.")
-    elif hunting:
+    if hunting:
         print("\n🎯 <b>VENTANA ABIERTA:</b> Operando a full.")
+    else:
+        print("\n💤 <b>ZONA MUERTA:</b> El Vigilante gestionará el ahorro de energía.")
 
 if __name__ == "__main__":
     report()
