@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  chacal_alpha:
+    image: freqtradeorg/freqtrade:stable
+    restart: always
+    container_name: chacal_alpha
+    volumes:
+      - "./user_data:/freqtrade/user_data"
+    command: >
+      trade --strategy ChacalPulseV4_Hyperopt
+      --config /freqtrade/user_data/config_alpha.json
+      --db-url sqlite:////freqtrade/user_data/tradesv3_alpha_dry.sqlite
+      --logfile /freqtrade/user_data/logs/chacal_alpha.log
+
+  chacal_beta:
+    image: freqtradeorg/freqtrade:stable
+    restart: always
+    container_name: chacal_beta
+    volumes:
+      - "./user_data:/freqtrade/user_data"
+    command: >
+      trade --strategy ChacalPulseV4_Hyperopt
+      --config /freqtrade/user_data/config_beta.json
+      --db-url sqlite:////freqtrade/user_data/tradesv3_beta_dry.sqlite
+      --logfile /freqtrade/user_data/logs/chacal_beta.log
+
+  chacal_gamma:
+    image: freqtradeorg/freqtrade:stable
+    restart: always
+    container_name: chacal_gamma
+    volumes:
+      - "./user_data:/freqtrade/user_data"
+    command: >
+      trade --strategy ChacalPulseV4_Hyperopt
+      --config /freqtrade/user_data/config_gamma.json
+      --db-url sqlite:////freqtrade/user_data/tradesv3_gamma_dry.sqlite
+      --logfile /freqtrade/user_data/logs/chacal_gamma.log
+
+  chacal_delta:
+    image: freqtradeorg/freqtrade:stable
+    restart: always
+    container_name: chacal_delta
+    volumes:
+      - "./user_data:/freqtrade/user_data"
+    command: >
+      trade --strategy ChacalPulseV4_Hyperopt
+      --config /freqtrade/user_data/config_delta.json
+      --db-url sqlite:////freqtrade/user_data/tradesv3_delta_dry.sqlite
+      --logfile /freqtrade/user_data/logs/chacal_delta.log
