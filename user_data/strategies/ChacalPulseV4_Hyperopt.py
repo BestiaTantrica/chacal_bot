@@ -102,9 +102,14 @@ class ChacalPulseV4_Hyperopt(IStrategy):
             'is_pulse_window'
         ] = 1
 
-        # Todo es Modo Hunter: Solo en ventana.
+        # Bloqueo Fin de Semana (Sábado = 5, Domingo = 6)
+        dataframe['day_of_week'] = dataframe['date_utc'].dt.dayofweek
+        dataframe['is_weekend'] = 0
+        dataframe.loc[dataframe['day_of_week'] >= 5, 'is_weekend'] = 1
+
+        # Todo es Modo Hunter: Solo en ventana y NO en fin de semana.
         dataframe['gate_open'] = 0
-        dataframe.loc[dataframe['is_pulse_window'] == 1, 'gate_open'] = 1
+        dataframe.loc[(dataframe['is_pulse_window'] == 1) & (dataframe['is_weekend'] == 0), 'gate_open'] = 1
 
         dataframe['price_change'] = (dataframe['close'] - dataframe['open']) / dataframe['open']
         
@@ -155,6 +160,14 @@ class ChacalPulseV4_Hyperopt(IStrategy):
             adx = last_candle.get('adx', 0)
             rsi = last_candle.get('rsi', 50)
             
+            # --- LÓGICA DE CIERRE POR TIEMPO (PUNTO DE NO RETORNO - FASE 2) ---
+            # Límite máximo: 240 minutos (4 horas) para evitar desangre.
+            trade_duration = (current_time - trade.open_date_utc).total_seconds() / 60
+            if trade_duration >= 240:
+                return "time_exhaustion_max"
+
+            # Nota: El cierre por fin de ventana (Londres/NY) se gestiona vía Vigilante externo.
+
             # Determinar ROI objetivo según régimen
             if adx > 25 and rsi > 55:
                 # BULL: Buscar ganancias mayores
