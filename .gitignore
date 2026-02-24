@@ -39,3 +39,11 @@ user_data/regimen_actual.json
 *.bak
 update_token.py
 check_hyperopt.py
+
+# Audit and Staging (Pegaso 3.0)
+_audit_pegaso_3_0/
+LIVE_STAGING/
+AWS_PRODUCTION_ONLY/
+user_data/backtest_results/temp_extracted/
+user_data/config_backtest_local.json
+
