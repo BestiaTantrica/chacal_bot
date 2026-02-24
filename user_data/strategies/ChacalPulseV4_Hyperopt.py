@@ -63,13 +63,24 @@ class ChacalPulseV4_Hyperopt(IStrategy):
         "NEAR/USDT:USDT": 2.772
     }
 
-    # Parámetros Hyperoptables (Solo como referencia, el mapa manda)
-    v_factor = DecimalParameter(1.5, 6.0, default=4.319, space="buy", optimize=True)
-    pulse_change = DecimalParameter(0.0005, 0.005, default=0.004, space="buy", optimize=True)
+    # Parámetros cargados desde la configuración (JSON manda)
+    v_factor = DecimalParameter(1.5, 6.0, default=4.319, space="buy", load=True, optimize=False)
+    pulse_change = DecimalParameter(0.0005, 0.005, default=0.004, space="buy", load=True, optimize=False)
 
-    def get_v_factor(self, pair: str) -> float:
-        """Retorna el v_factor oficial o un valor defensivo alto."""
-        return self.v_factors_map.get(pair, 6.0)
+    def get_v_factor(self, pair: str, adx: float = 0.0) -> float:
+        """
+        Retorna el v_factor oficial o un valor dinámico según el régimen.
+        En mercados laterales (ADX < 25), relaja el filtro un 25% para permitir scalping.
+        """
+        base_v = self.v_factors_map.get(pair, 6.0)
+        
+        # RÉGIMEN DINÁMICO (PEAGSO 3.0)
+        if adx > 0 and adx < 25:
+            # Mercados laterales: Relajamos para cazar en calma.
+            return base_v * 0.75
+        
+        # Mercados en tendencia: Blindaje total Fase 2.
+        return base_v
 
 
     # --- LEVERAGE (FUTURES REALES) ---
@@ -193,10 +204,13 @@ class ChacalPulseV4_Hyperopt(IStrategy):
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         dataframe.loc[:, 'enter_long'] = 0
         
+        # Obtener ADX actual para dinamismo
+        adx = dataframe['adx'].iloc[-1] if not dataframe.empty else 0
+        
         # LONG: Ventana + Vol Spike + Precio Up
         pulse_long = (
             (dataframe['gate_open'] == 1) &
-            (dataframe['volume'] > (dataframe['volume_mean'] * self.get_v_factor(metadata['pair']))) &
+            (dataframe['volume'] > (dataframe['volume_mean'] * self.get_v_factor(metadata['pair'], adx))) &
             (dataframe['price_change'] > self.pulse_change.value) &
             (dataframe['rsi'] < 80)
         )
@@ -209,10 +223,13 @@ class ChacalPulseV4_Hyperopt(IStrategy):
     def populate_entry_short(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         dataframe.loc[:, 'enter_short'] = 0
         
+        # Obtener ADX actual para dinamismo
+        adx = dataframe['adx'].iloc[-1] if not dataframe.empty else 0
+
         # SHORT: Ventana + Vol Spike + Precio Down
         pulse_short = (
             (dataframe['gate_open'] == 1) &
-            (dataframe['volume'] > (dataframe['volume_mean'] * self.get_v_factor(metadata['pair']))) &
+            (dataframe['volume'] > (dataframe['volume_mean'] * self.get_v_factor(metadata['pair'], adx))) &
             (dataframe['price_change'] < -self.pulse_change.value) &
             (dataframe['rsi'] > 20)
         )

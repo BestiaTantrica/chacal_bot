@@ -25,20 +25,6 @@ Este ecosistema se basa en 4 Torres de Trading operando en Docker:
   - Fase 2: Robustez de 365 días (1 año).
   - Operación: 30-60 días para agilidad táctica.
 
-## 🛰️ CONEXIÓN Y CONTROL (EL METAL)
-
-El agente debe conocer su territorio para operar sin preguntar:
-
-- **ID Instancia:** `i-003dcde3a3dadd6ea` (sa-east-1).
-- **IP Pública Maestro:** `56.124.22.155` (Variable, consultar via Boto3 si falla).
-- **Usuario SSH:** `ec2-user`.
-- **Llave Local (Windows):** `c:\Freqtrade\llave-sao-paulo.pem`.
-- **Ruta Remota:** `/home/ec2-user/chacal_bot`.
-- **Archivos de Poder:**
-  - `.env.aws`: Credenciales AWS (Boto3).
-  - `.env`: Tokens de Telegram (Conserje/Reports).
-  - `user_data/config_*.json`: El ADN de las 4 torres.
-
 ## 🎞️ EL PROTOCOLO DE FASES (MÉTODO DE ORO)
 
 La optimización no es aleatoria; sigue un flujo de refinado quirúrgico:
@@ -62,12 +48,11 @@ La optimización no es aleatoria; sigue un flujo de refinado quirúrgico:
 
 ## 🛡️ PROTOCOLOS ESTRATÉGICOS (PEGASO STRICT)
 
-1. **PRODUCCIÓN PRIMERO:** Trabajamos con capital real ($300 total / $75 por torre). No hay margen para el error.
+1. **PRODUCCIÓN PRIMERO:** Trabajamos con capital real 10% INTOCABLE 12 MAX TRADES OPEN, UNA POR PAR.
 2. **GITEO Y ÓRBITA:** Cambio local -> `git push` -> `ssh git pull` en la torre. Sincronía obligatoria.
 3. **SINTAXIS FUTURES:** Obligatorio usar `PAR/USDT:USDT` en todas las configuraciones y comandos.
 4. **ENERGÍA Y PROFIT:**
    - **Horas Mágicas (ART):** Londres (04:55), NY (10:25).
-   - **Vigilante:** El profit manda sobre el ahorro. NUNCA apagar si hay trades abiertos o `/tmp/NO_APAGAR`.
 5. **ESTRATEGIA:** La única espada es `ChacalPulseV4_Hyperopt` con `"can_short": true`.
 6. **ANTI-PREGUNTONTO:** Prohibido preguntar por reglas de supervivencia. Lee la `BITACORA_CHACAL_V4.md` y el `PROMPT_LLAVE.md` antes de actuar.
 

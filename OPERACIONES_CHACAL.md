@@ -11,6 +11,20 @@ El sistema opera con **4 TORRES INDEPENDIENTES**:
 3. **GAMMA:** DOGE, AVAX, LINK.
 4. **DELTA:** DOT, SUI, NEAR.
 
+# REGISTRO DE OPERACIONES CHACAL V4
+
+## Sesión 23/02/2026 - Certificación Live Exitosa 🦅
+
+**Estado:** ✅ EXCELENTE PERFORMANCE
+
+1. **NEAR/USDT:USDT** +2.283 USDT (2.77%) - Duración: ~3hs
+2. **SUI/USDT:USDT** +2.088 USDT (2.53%)
+3. **ETH/USDT:USDT** +2.037 USDT (2.47%)
+4. **BTC/USDT:USDT** +1.886 USDT (2.38%)
+
+> [!IMPORTANT]
+> Se mantiene el límite de cierre de 4hs. Los resultados demuestran que la paciencia del bot en trades de 3hs (como NEAR) está pagando con profit sólido. NO MODIFICAR.
+
 > [!WARNING]
 > El contenedor `chacal_bot` genérico es **OBSOLETO** y causa conflictos de puerto y base de datos. Solo deben estar activos los contenedores `chacal_alpha/beta/gamma/delta`.
 

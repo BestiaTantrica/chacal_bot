@@ -3,27 +3,33 @@
 ## QUICK START
 
 ### 1. Configurar IP de AWS
+
 Edita `.env.deployment` y cambia:
+
 ```bash
 AWS_IP=TU_IP_AQUI
 ```
 
 ### 2. Ejecutar Deployment Automático
+
 ```cmd
 desplegar_automatico.cmd
 ```
 
 Esto hace:
+
 - ✅ Git add/commit/push (opcional)
 - ✅ Sube archivos via SCP a AWS
 - ✅ Ejecuta setup remoto
 
 ### 3. Conectar SSH
+
 ```cmd
 ssh -i llave-sao-paulo.pem ec2-user@TU_IP
 ```
 
 ### 4. Iniciar Bot
+
 ```bash
 cd chacal_bot
 python3 comandante.py
@@ -47,9 +53,9 @@ python3 comandante.py
 ## WORKFLOW
 
 ```
-PC LOCAL → GIT → AWS SERVER
-   ↓         ↓        ↓
- Editar   Push   Deploy
+PC LOCAL → AWS SERVER
+   ↓          ↓
+ Editar    Deploy
 ```
 
 **Filosofía Chacal:** "El Chacal no persigue. Espera el momento exacto."

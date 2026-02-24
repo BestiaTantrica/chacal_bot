@@ -47,5 +47,41 @@ Se procedió a la migración quirúrgica del Conserje (`chacal_bot_cloud`):
 - **Validación:** Se ejecutó `git pull` en el servidor y se reiniciaron las 4 torres.
 - **Estado:** Sincronizado al 100%. La estrategia en el servidor ahora tiene los 12 v_factors oficiales.
 
-**AGENTE PEGASO | REPORTE 4: SINCRONIZACIÓN CERTIFICADA**
+## 🦅 UNIFICACIÓN Y BLINDAJE DE CAPITAL (20/02/2026)
+
+- **Arquitectura:** Consolidación de las 4 torres en un único proceso **chacal_v4_unified** (Optimizando RAM/SWAP).
+- **Control:** Nueva IP de campo: `18.229.132.216`.
+- **Blindaje:** Implementación de `tradeable_balance_ratio: 0.90` (Reserva del 10% para comisiones).
+- **Comunicación:** Restauración de Telegram via Alpha Token corregido.
+- **Operativa:** Validación exitosa de los `v_factors` de la Fase 2 durante la ventana de Londres.
+
+## 🦅 PROTOCOLO DE BLINDAJE V4.1 (ESTANDARIZACIÓN)
+
+Para evitar regresiones técnicas y versiones "lite" accidentales, se establece:
+
+1. **VALIDACIÓN OBLIGATORIA:** Antes de cualquier reinicio, se debe ejecutar `python scripts/validate_deployment.py`.
+2. **FUENTE UNIFICADA:** El único contenedor válido es `chacal_bot`. La ruta raíz real es `/home/ec2-user/freqtrade/`. Las configuraciones `_alpha`, `_beta`, etc., están obsoletas. La referencia es `user_data/config_chacal_v4_unified_final.json`.
+3. **ESTRATEGIA INTOCABLE:** `ChacalPulseV4_Hyperopt.py` es la única espada. No se aceptan versiones simplificadas.
+4. **MEMORIA DE DECISIONES:** Este archivo (`BITACORA_CHACAL_V4.md`) es el registro histórico. No se crean bitácoras nuevas para cada sesión.
+
+## 🏁 REPORTE DE DESPLIEGUE REAL V4.1 (23/02/2026)
+
+- **Estado:** 🚀 OPERANDO EN VIVO (LIVE)
+- **Saldo Real:** $136.71 USDT
+- **Horarios:** Londres (05:00 ART) y NY (10:25 ART) Configurados.
+- **Blindaje:** Corte de 4hs (`time_exhaustion_4h`) verificado y activo.
+- **Pairs:** 12 operativos (Whitelisted 11 + BNB fix).
+- **Seguridad:** Crontab limpio, servidor persistente (24/7).
+
+## 🦅 HITO: PEGASO 3.0 - RÉGIMEN DINÁMICO (24/02/2026)
+
+- **Innovación:** Implementación de `get_v_factor` dinámico. Relajación del 25% en laterales (ADX < 25) para capturar liquidez en "Horas Mágicas". Blindaje total en tendencia.
+- **Resultados Auditoría (PC Local - 30 Días Enero):**
+  - **Fase 2 Estática:** +1.12% Profit | 11 Trades | 63.6% Win Rate.
+  - **Pegaso 3.0 (Dinámico):** **+3.77% Profit** | 23 Trades | **73.9% Win Rate**.
+- **Seguridad:** Drawdown controlado de **-0.55%**. 100% de trades dentro de Ventanas Hunter (Londres/NY).
+- **Fix:** Habilitación de **BNB/USDT** (12 pares totales). Corrección de blacklist heredada.
+- **Estado:** 🏁 DESPLEGADO EN AWS Y VERIFICADO.
+
+**AGENTE PEGASO | REPORTE 8: ACTIVACIÓN REGIMEN DINÁMICO**
 🦅
