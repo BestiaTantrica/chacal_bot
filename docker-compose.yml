@@ -9,4 +9,4 @@ services:
     ports:
       - "8080:8080"
     command: >
-      trade -v --logfile /freqtrade/user_data/logs/freqtrade.log --db-url sqlite:////freqtrade/user_data/tradesv3.sqlite --config /freqtrade/user_data/config_chacal_aws.json --strategy EstrategiaChacal
+      trade -v --logfile /freqtrade/user_data/logs/freqtrade.log --db-url sqlite:////freqtrade/user_data/tradesv3.sqlite --config /freqtrade/user_data/config_chacal_v4_LIVE.json --strategy ChacalPulseV4_Hyperopt

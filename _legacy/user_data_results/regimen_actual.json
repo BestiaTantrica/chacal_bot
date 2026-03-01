@@ -1,0 +1,12 @@
+{
+    "periodo_recomendado": {
+        "inicio": "20251219",
+        "fin": "20260207"
+    },
+    "regimen": "Espejo Hist\u00f3rico",
+    "direccion": "Neutro",
+    "meta": {
+        "distance": 0.44358486397570784,
+        "generated": "2026-01-29T20:27:35.672790"
+    }
+}

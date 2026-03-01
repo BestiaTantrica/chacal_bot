@@ -83,5 +83,14 @@ Para evitar regresiones técnicas y versiones "lite" accidentales, se establece:
 - **Fix:** Habilitación de **BNB/USDT** (12 pares totales). Corrección de blacklist heredada.
 - **Estado:** 🏁 DESPLEGADO EN AWS Y VERIFICADO.
 
-**AGENTE PEGASO | REPORTE 8: ACTIVACIÓN REGIMEN DINÁMICO**
+## 🦅 HITO: DESPLIEGUE PC LOCAL - @PC_LOCAL_BOT (27/02/2026)
+
+- **Situación:** Activación del bot en PC Local para operación nocturna autónoma.
+- **Configuración:** `config_chacal_v4_LIVE.json` (Unificada - 12 Pares).
+- **Telegram PC Local:** `@PC_LOCAL_BOT` activo con token `8420746376:AAFbY0xOu5kRgOFjYcPwfmQ4_qN3vKoTRx4`.
+- **Binance API:** Llaves de producción cargadas y verificadas (`0HUJp...` / `ZELOF...`).
+- **Blindaje:** Eliminación de blacklist heredada de AWS (BNB habilitado). 100% operativo en un solo proceso Docker.
+- **IA Bridge:** Supervisión activa con Bridge de gestión de novedades.
+
+**AGENTE PEGASO | REPORTE 9: ESTABILIDAD TOTAL PC LOCAL**
 🦅

@@ -2,12 +2,13 @@
 config_*.json
 user_data/config_backtest.json
 user_data/config.json
-.env
-.env.deployment
-.env.aws
+.env*
 *.pem
 api key binance.txt
 *.csv
+_legacy/configs/*
+_legacy/user_data_configs/*
+_legacy/root_scripts/*.json
 
 # Freqtrade Data and Results
 user_data/data/*
